@@ -82,7 +82,7 @@ MYLIBS= -ldl
 
 CC= gcc
 # (Optionally we can use -march=native -mno-avx512f.)
-CFLAGS= -Wall -O2 $(MYCFLAGS) -fno-stack-protector -fno-common
+CFLAGS= -Wall -O2 -I$(SRC_DIR) -I. $(MYCFLAGS) -fno-stack-protector -fno-common
 AR= ar rc
 RANLIB= ranlib
 RM= rm -f
@@ -93,6 +93,9 @@ RM= rm -f
 
 
 LIBS = -lm
+
+SRC_DIR = src
+VPATH = $(SRC_DIR)
 
 CORE_T=	liblua.a
 CORE_O=	lapi.o lcode.o lctype.o ldebug.o ldo.o ldump.o lfunc.o lgc.o llex.o \
@@ -129,7 +132,7 @@ clean:
 	$(RM) $(ALL_T) $(ALL_O)
 
 depend:
-	@$(CC) $(CFLAGS) -MM *.c
+	@$(CC) $(CFLAGS) -MM $(SRC_DIR)/*.c
 
 echo:
 	@echo "CC = $(CC)"
