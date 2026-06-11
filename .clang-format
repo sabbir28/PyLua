@@ -1,0 +1,8 @@
+BasedOnStyle: LLVM
+IndentWidth: 2
+ColumnLimit: 88
+AlignConsecutiveMacros: true
+AlignEscapedNewlines: Left
+BreakBeforeBraces: Attach
+PointerAlignment: Right
+SortIncludes: Never
