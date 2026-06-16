@@ -1,0 +1,92 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "PyLua",
+    "scopeName": "source.pylua",
+    "patterns": [
+        {
+            "include": "#comments"
+        },
+        {
+            "include": "#keywords"
+        },
+        {
+            "include": "#strings"
+        },
+        {
+            "include": "#numbers"
+        },
+        {
+            "include": "#blocks"
+        }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                {
+                    "begin": "--\\[\\[",
+                    "end": "\\]\\]",
+                    "name": "comment.block.lua"
+                },
+                {
+                    "begin": "--",
+                    "end": "$",
+                    "name": "comment.line.double-dash.lua"
+                }
+            ]
+        },
+        "keywords": {
+            "patterns": [
+                {
+                    "match": "\\b(and|break|do|else|elseif|end|false|for|function|if|in|local|nil|not|or|repeat|return|then|true|until|while|global|emu|class)\\b",
+                    "name": "keyword.control.pylua"
+                },
+                {
+                    "match": "\\b(print|math|string|table|io|os|debug|request)\\b",
+                    "name": "support.function.pylua"
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "begin": "\"",
+                    "end": "\"",
+                    "name": "string.quoted.double.pylua",
+                    "patterns": [
+                        {
+                            "match": "\\\\.",
+                            "name": "constant.character.escape.pylua"
+                        }
+                    ]
+                },
+                {
+                    "begin": "'",
+                    "end": "'",
+                    "name": "string.quoted.single.pylua",
+                    "patterns": [
+                        {
+                            "match": "\\\\.",
+                            "name": "constant.character.escape.pylua"
+                        }
+                    ]
+                }
+            ]
+        },
+        "numbers": {
+            "patterns": [
+                {
+                    "match": "\\b[0-9]+(\\.[0-9]+)?\\b",
+                    "name": "constant.numeric.pylua"
+                }
+            ]
+        },
+        "blocks": {
+            "patterns": [
+                {
+                    "match": "\\{|\\}",
+                    "name": "punctuation.section.block.pylua"
+                }
+            ]
+        }
+    }
+}

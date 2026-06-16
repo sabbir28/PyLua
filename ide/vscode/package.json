@@ -1,0 +1,36 @@
+{
+    "name": "pylua-support",
+    "displayName": "PyLua Support",
+    "description": "Syntax highlighting and language support for PyLua (Custom Lua with class and emu keywords)",
+    "version": "0.1.0",
+    "publisher": "antigravity",
+    "engines": {
+        "vscode": "^1.60.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "pylua",
+                "aliases": [
+                    "PyLua",
+                    "pylua"
+                ],
+                "extensions": [
+                    ".lua",
+                    ".pylua"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "pylua",
+                "scopeName": "source.pylua",
+                "path": "./syntaxes/pylua.tmLanguage.json"
+            }
+        ]
+    }
+}
