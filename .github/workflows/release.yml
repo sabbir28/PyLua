@@ -175,6 +175,13 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
+      - name: Set up Android NDK
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27d
+          add-to-path: false
+
       - name: Restore Android CMake cache
         uses: actions/cache@v4
         with:
@@ -185,6 +192,8 @@ jobs:
 
       - name: Configure Android CMake
         shell: bash
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
           set -euo pipefail
           cmake -S . -B build-android-${{ matrix.abi }} -G Ninja \
@@ -205,7 +214,8 @@ jobs:
           abi='${{ matrix.abi }}'
           package_root="${{ env.PROJECT_NAME }}-${version}-android-${abi}"
           mkdir -p "packages/${package_root}/bin" "packages/${package_root}/lib"
-          find "build-android-${abi}" -type f \( -name 'pylua' -o -name 'libpylua_static.a' \) -exec cp {} "packages/${package_root}/bin/" \;
+          find "build-android-${abi}" -type f -name 'pylua' -exec cp {} "packages/${package_root}/bin/" \;
+          find "build-android-${abi}" -type f -name 'libpylua_static.a' -exec cp {} "packages/${package_root}/lib/" \;
           cp README.md "packages/${package_root}/README.md" || true
           (cd packages && zip -r "${package_root}.zip" "${package_root}")
 
