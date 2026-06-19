@@ -61,11 +61,22 @@ set(PYLUA_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/loadlib.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lcorolib.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lveclib.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lguilib.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lrequestlib.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lhashlib.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/linit.c
 )
+
+
+if (WIN32)
+    list(APPEND PYLUA_SOURCES
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lguilib.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lrequestlib.c
+    )
+else ()
+    list(APPEND PYLUA_SOURCES
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lguilib_stub.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lrequestlib_stub.c
+    )
+endif ()
 
 set(PYLUA_MAIN
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lua.c
@@ -97,17 +108,26 @@ if (WIN32)
     )
 endif ()
 
-target_compile_options(
-        pylua_static
-        PRIVATE
-        -Wall
-        -Wextra
-        -Wshadow
-        -Wconversion
-        -Wundef
-        -Wdouble-promotion
-        -Wwrite-strings
-)
+if (MSVC)
+    target_compile_options(
+            pylua_static
+            PRIVATE
+            /W4
+            /permissive-
+    )
+else ()
+    target_compile_options(
+            pylua_static
+            PRIVATE
+            -Wall
+            -Wextra
+            -Wshadow
+            -Wconversion
+            -Wundef
+            -Wdouble-promotion
+            -Wwrite-strings
+    )
+endif ()
 
 # ============================================================================
 # Executable
@@ -186,7 +206,7 @@ message(STATUS "PyLua Build Configuration")
 message(STATUS "================================")
 message(STATUS "Source Dir : ${CMAKE_SOURCE_DIR}")
 message(STATUS "Binary Dir : ${CMAKE_BINARY_DIR}")
-message(STATUS "Executable : ${CMAKE_BINARY_DIR}/bin/pylua.exe")
+message(STATUS "Executable : ${CMAKE_BINARY_DIR}/bin/pylua${CMAKE_EXECUTABLE_SUFFIX}")
 message(STATUS "Library    : ${CMAKE_BINARY_DIR}/lib")
 message(STATUS "Data Dir   : ${BUILD_DATA_DIR}")
 message(STATUS "================================")
