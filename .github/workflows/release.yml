@@ -71,7 +71,7 @@ jobs:
       - name: Configure CMake
         shell: pwsh
         run: |
-          cmake -S . -B build-windows -G "Visual Studio 17 2022" -A x64 `
+          cmake -S . -B build-windows `
             -DCMAKE_BUILD_TYPE=Release `
             -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/dist/windows"
 
