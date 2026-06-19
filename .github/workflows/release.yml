@@ -97,7 +97,11 @@ jobs:
           $version = '${{ needs.version.outputs.version }}'
           $out = "${{ github.workspace }}\packages\${{ env.PROJECT_NAME }}-$version-Setup.exe"
           New-Item -ItemType Directory -Force -Path packages | Out-Null
-          & "C:\ProgramData\chocolatey\bin\makensis.exe" "/DPRODUCT_VERSION=$version" "/DSOURCE_DIR=${{ github.workspace }}\dist\windows" "/DOUTPUT_FILE=$out" packaging/windows/PyLuaInstaller.nsi
+          & "C:\Program Files (x86)\NSIS\makensis.exe" `
+            "/DPRODUCT_VERSION=$version" `
+            "/DSOURCE_DIR=${{ github.workspace }}\dist\windows" `
+            "/DOUTPUT_FILE=$out" `
+            packaging/windows/PyLuaInstaller.nsi
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
