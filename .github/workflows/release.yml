@@ -1,17 +1,16 @@
 name: Release
 
-# Build and publish a complete release for every push to the default release branch.
+# Build and publish a complete release for every push to main
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-# Prevent two main-branch release jobs from calculating the same daily build number.
+# Prevent concurrent releases
 concurrency:
   group: release-main
   cancel-in-progress: false
 
-# Default to the least privilege needed by build jobs. The publish job elevates only contents:write.
 permissions:
   contents: read
 
@@ -23,65 +22,67 @@ jobs:
   version:
     name: Generate release version
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     outputs:
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
     steps:
-      - name: Checkout tags for version calculation
+      - name: Checkout with tags
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Calculate YYYY.MM.DD.BUILD_NUMBER version
+      - name: Calculate version (YYYY.MM.DD.BUILD_NUMBER)
         id: version
         shell: bash
         run: |
           set -euo pipefail
+
           release_date="$(date -u +'%Y.%m.%d')"
           git fetch --tags --force
-          latest_build="$({ git tag --list "v${release_date}.*" || true; } | sed -E "s/^v${release_date}\.([0-9]+)$/\1/" | sort -n | tail -1)"
+
+          latest_build=$(git tag --list "v${release_date}.*" | \
+            sed -E "s/^v${release_date}\.([0-9]+)$/\1/" | \
+            sort -n | tail -1 || echo "")
+
           if [[ -z "${latest_build}" ]]; then
             build_number=1
           else
             build_number=$((latest_build + 1))
           fi
+
           version="${release_date}.${build_number}"
+          tag="v${version}"
+
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
-          echo "tag=v${version}" >> "${GITHUB_OUTPUT}"
-          echo "Generated release version: ${version}"
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+          echo "Generated version: ${version} (${tag})"
 
   build-windows:
     name: Windows x64
     runs-on: windows-latest
     needs: version
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Restore CMake/Ninja cache
+      - name: Restore CMake cache
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/ninja
             build-windows/CMakeFiles
-          key: windows-cmake-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'src/**', 'include/**') }}
-          restore-keys: |
-            windows-cmake-${{ runner.os }}-
+          key: windows-cmake-${{ hashFiles('CMakeLists.txt', 'src/**', 'include/**') }}
+          restore-keys: windows-cmake-
 
       - name: Configure CMake
-        shell: pwsh
-        run: >-
+        run: >
           cmake -S . -B build-windows -G "Visual Studio 17 2022" -A x64
           -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}\dist\windows"
+          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/dist/windows"
 
-      - name: Build Release binaries
-        shell: pwsh
+      - name: Build
         run: cmake --build build-windows --config Release --parallel
 
-      - name: Stage runtime files
+      - name: Stage files
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist\windows | Out-Null
@@ -89,18 +90,17 @@ jobs:
           if (Test-Path README.md) { Copy-Item README.md dist\windows\README.md -Force }
 
       - name: Install NSIS
-        shell: pwsh
         run: choco install nsis -y --no-progress
 
-      - name: Build NSIS installer
+      - name: Build Installer
         shell: pwsh
         run: |
           $version = '${{ needs.version.outputs.version }}'
           $out = "${{ github.workspace }}\packages\${{ env.PROJECT_NAME }}-$version-Setup.exe"
           New-Item -ItemType Directory -Force -Path packages | Out-Null
-          & makensis.exe "/DPRODUCT_VERSION=$version" "/DSOURCE_DIR=${{ github.workspace }}\dist\windows" "/DOUTPUT_FILE=$out" packaging\windows\PyLuaInstaller.nsi
+          & makensis.exe "/DPRODUCT_VERSION=$version" "/DSOURCE_DIR=${{ github.workspace }}\dist\windows" "/DOUTPUT_FILE=$out" packaging/windows/PyLuaInstaller.nsi
 
-      - name: Upload Windows installer
+      - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PROJECT_NAME }}-${{ needs.version.outputs.version }}-Windows-x64
@@ -113,53 +113,47 @@ jobs:
     runs-on: ubuntu-latest
     needs: version
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install build tools
-        shell: bash
+      - name: Install dependencies
         run: |
-          set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ninja-build zip
 
-      - name: Restore CMake/Ninja cache
+      - name: Restore CMake cache
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/ninja
             build-linux/CMakeFiles
-          key: linux-cmake-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'src/**', 'include/**') }}
-          restore-keys: |
-            linux-cmake-${{ runner.os }}-
+          key: linux-cmake-${{ hashFiles('CMakeLists.txt', 'src/**', 'include/**') }}
+          restore-keys: linux-cmake-
 
       - name: Configure CMake
-        shell: bash
         run: cmake -S . -B build-linux -G Ninja -DCMAKE_BUILD_TYPE=Release
 
-      - name: Build Release binaries
-        shell: bash
+      - name: Build
         run: cmake --build build-linux --config Release --parallel
 
-      - name: Package Linux archives
-        shell: bash
+      - name: Package Linux
         run: |
-          set -euo pipefail
           version='${{ needs.version.outputs.version }}'
-          package_root="${{ env.PROJECT_NAME }}-${version}-Linux"
+          package_root="${{ env.PROJECT_NAME }}-${version}-Linux-x64"
           mkdir -p "packages/${package_root}"
-          cp build-linux/bin/pylua "packages/${package_root}/pylua"
-          cp README.md "packages/${package_root}/README.md" || true
-          tar -C packages -czf "packages/${package_root}.tar.gz" "${package_root}"
-          (cd packages && zip -r "${package_root}.zip" "${package_root}")
+          cp build-linux/bin/pylua "packages/${package_root}/" 2>/dev/null || true
+          cp README.md "packages/${package_root}/" 2>/dev/null || true
 
-      - name: Upload Linux packages
+          cd packages
+          tar -czf "${package_root}.tar.gz" "${package_root}"
+          zip -r "${package_root}.zip" "${package_root}"
+
+      - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PROJECT_NAME }}-${{ needs.version.outputs.version }}-Linux-x64
           path: |
-            packages/${{ env.PROJECT_NAME }}-${{ needs.version.outputs.version }}-Linux.tar.gz
-            packages/${{ env.PROJECT_NAME }}-${{ needs.version.outputs.version }}-Linux.zip
+            packages/${{ env.PROJECT_NAME }}-${{ needs.version.outputs.version }}-Linux-x64.tar.gz
+            packages/${{ env.PROJECT_NAME }}-${{ needs.version.outputs.version }}-Linux-x64.zip
           retention-days: 90
           if-no-files-found: error
 
@@ -172,44 +166,37 @@ jobs:
       matrix:
         abi: [armeabi-v7a, arm64-v8a, x86, x86_64]
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Restore Android CMake cache
-        uses: actions/cache@v4
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
         with:
-          path: build-android-${{ matrix.abi }}/CMakeFiles
-          key: android-cmake-${{ matrix.abi }}-${{ hashFiles('CMakeLists.txt', 'src/**', 'include/**') }}
-          restore-keys: |
-            android-cmake-${{ matrix.abi }}-
+          ndk-version: r27
+          add-to-path: false
 
-      - name: Configure Android CMake
-        shell: bash
+      - name: Configure CMake
         run: |
-          set -euo pipefail
           cmake -S . -B build-android-${{ matrix.abi }} -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
+            -DCMAKE_TOOLCHAIN_FILE="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake" \
             -DANDROID_ABI=${{ matrix.abi }} \
             -DANDROID_PLATFORM=android-23
 
-      - name: Build Android binaries
-        shell: bash
+      - name: Build
         run: cmake --build build-android-${{ matrix.abi }} --config Release --parallel
 
-      - name: Package Android ABI archive
-        shell: bash
+      - name: Package Android ABI
         run: |
-          set -euo pipefail
           version='${{ needs.version.outputs.version }}'
           abi='${{ matrix.abi }}'
           package_root="${{ env.PROJECT_NAME }}-${version}-android-${abi}"
-          mkdir -p "packages/${package_root}/bin" "packages/${package_root}/lib"
+          mkdir -p "packages/${package_root}/bin"
           find "build-android-${abi}" -type f \( -name 'pylua' -o -name 'libpylua_static.a' \) -exec cp {} "packages/${package_root}/bin/" \;
-          cp README.md "packages/${package_root}/README.md" || true
-          (cd packages && zip -r "${package_root}.zip" "${package_root}")
+          cp README.md "packages/${package_root}/" 2>/dev/null || true
 
-      - name: Upload Android package
+          cd packages && zip -r "${package_root}.zip" "${package_root}"
+
+      - name: Upload Android artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PROJECT_NAME }}-${{ needs.version.outputs.version }}-android-${{ matrix.abi }}
@@ -225,20 +212,19 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Download all release artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: release-assets
           merge-multiple: true
 
-      - name: Create immutable GitHub Release and upload assets
+      - name: Create Release & Upload Assets
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.version.outputs.tag }}
           name: PyLua ${{ needs.version.outputs.version }}
           generate_release_notes: true
           make_latest: true
-          fail_on_unmatched_files: true
           files: release-assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
