@@ -1,5 +1,4 @@
 name: Release
-
 on:
   push:
     branches:
@@ -59,33 +58,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup MSVC Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Restore CMake cache
         uses: actions/cache@v4
         with:
           path: |
             ~/.cache/ninja
-            build-windows/CMakeFiles
+            build-windows
           key: windows-cmake-${{ hashFiles('CMakeLists.txt', 'src/**', 'include/**') }}
           restore-keys: windows-cmake-
 
       - name: Configure CMake
         shell: pwsh
         run: |
-          cmake -S . -B build-windows `
+          cmake -S . -B build-windows -G Ninja `
             -DCMAKE_BUILD_TYPE=Release `
             -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/dist/windows"
 
       - name: Build
-        run: cmake --build build-windows --config Release --parallel
+        run: cmake --build build-windows --parallel
 
       - name: Stage files
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist\windows | Out-Null
-          Copy-Item build-windows\bin\Release\pylua.exe dist\windows\pylua.exe -Force
+          Copy-Item build-windows\bin\pylua.exe dist\windows\pylua.exe -Force
           if (Test-Path README.md) { Copy-Item README.md dist\windows\README.md -Force }
 
       - name: Install NSIS
+        shell: pwsh
         run: choco install nsis -y --no-progress
 
       - name: Build Installer
