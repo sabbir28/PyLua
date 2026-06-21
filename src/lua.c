@@ -23,20 +23,20 @@
 
 
 #if !defined(LUA_PROGNAME)
-#define LUA_PROGNAME		"lua"
+#define LUA_PROGNAME    "lua"
 #endif
 
 #if !defined(LUA_INIT_VAR)
-#define LUA_INIT_VAR		"LUA_INIT"
+#define LUA_INIT_VAR    "LUA_INIT"
 #endif
 
 /* Name of the environment variable with the name of the readline library */
 #if !defined(LUA_RLLIB_VAR)
-#define LUA_RLLIB_VAR		"LUA_READLINELIB"
+#define LUA_RLLIB_VAR   "LUA_READLINELIB"
 #endif
 
 
-#define LUA_INITVARVERSION	LUA_INIT_VAR LUA_VERSUFFIX
+#define LUA_INITVARVERSION  LUA_INIT_VAR LUA_VERSUFFIX
 
 
 static lua_State *globalL = NULL;
@@ -143,11 +143,11 @@ static int msghandler (lua_State *L) {
   const char *msg = lua_tostring(L, 1);
   if (msg == NULL) {  /* is error object not a string? */
     if (luaL_callmeta(L, 1, "__tostring") &&  /* does it have a metamethod */
-        lua_type(L, -1) == LUA_TSTRING)  /* that produces a string? */
+	lua_type(L, -1) == LUA_TSTRING)  /* that produces a string? */
       return 1;  /* that is the message */
     else
       msg = lua_pushfstring(L, "(error object is a %s value)",
-                               luaL_typename(L, 1));
+			       luaL_typename(L, 1));
   }
   luaL_traceback(L, L, msg, 1);  /* append a standard traceback */
   return 1;  /* return the traceback */
@@ -276,11 +276,11 @@ static int handle_script (lua_State *L, char **argv) {
 
 
 /* bits of various argument indicators in 'args' */
-#define has_error	1	/* bad option */
-#define has_i		2	/* -i */
-#define has_v		4	/* -v */
-#define has_e		8	/* -e */
-#define has_E		16	/* -E */
+#define has_error 1 /* bad option */
+#define has_i   2 /* -i */
+#define has_v   4 /* -v */
+#define has_e   8 /* -e */
+#define has_E   16  /* -E */
 
 
 /*
@@ -304,43 +304,43 @@ static int collectargs (char **argv, int *first) {
   for (i = 1; argv[i] != NULL; i++) {  /* handle arguments */
     *first = i;
     if (argv[i][0] != '-')  /* not an option? */
-        return args;  /* stop handling options */
+	return args;  /* stop handling options */
     switch (argv[i][1]) {  /* else check option */
       case '-':  /* '--' */
-        if (argv[i][2] != '\0')  /* extra characters after '--'? */
-          return has_error;  /* invalid option */
-        /* if there is a script name, it comes after '--' */
-        *first = (argv[i + 1] != NULL) ? i + 1 : 0;
-        return args;
+	if (argv[i][2] != '\0')  /* extra characters after '--'? */
+	  return has_error;  /* invalid option */
+	/* if there is a script name, it comes after '--' */
+	*first = (argv[i + 1] != NULL) ? i + 1 : 0;
+	return args;
       case '\0':  /* '-' */
-        return args;  /* script "name" is '-' */
+	return args;  /* script "name" is '-' */
       case 'E':
-        if (argv[i][2] != '\0')  /* extra characters? */
-          return has_error;  /* invalid option */
-        args |= has_E;
-        break;
+	if (argv[i][2] != '\0')  /* extra characters? */
+	  return has_error;  /* invalid option */
+	args |= has_E;
+	break;
       case 'W':
-        if (argv[i][2] != '\0')  /* extra characters? */
-          return has_error;  /* invalid option */
-        break;
+	if (argv[i][2] != '\0')  /* extra characters? */
+	  return has_error;  /* invalid option */
+	break;
       case 'i':
-        args |= has_i;  /* (-i implies -v) *//* FALLTHROUGH */
+	args |= has_i;  /* (-i implies -v) *//* FALLTHROUGH */
       case 'v':
-        if (argv[i][2] != '\0')  /* extra characters? */
-          return has_error;  /* invalid option */
-        args |= has_v;
-        break;
+	if (argv[i][2] != '\0')  /* extra characters? */
+	  return has_error;  /* invalid option */
+	args |= has_v;
+	break;
       case 'e':
-        args |= has_e;  /* FALLTHROUGH */
+	args |= has_e;  /* FALLTHROUGH */
       case 'l':  /* both options need an argument */
-        if (argv[i][2] == '\0') {  /* no concatenated argument? */
-          i++;  /* try next 'argv' */
-          if (argv[i] == NULL || argv[i][0] == '-')
-            return has_error;  /* no next argument or it is another option */
-        }
-        break;
+	if (argv[i][2] == '\0') {  /* no concatenated argument? */
+	  i++;  /* try next 'argv' */
+	  if (argv[i] == NULL || argv[i][0] == '-')
+	    return has_error;  /* no next argument or it is another option */
+	}
+	break;
       default:  /* invalid option */
-        return has_error;
+	return has_error;
     }
   }
   *first = 0;  /* no script name */
@@ -361,19 +361,19 @@ static int runargs (lua_State *L, char **argv, int n) {
     lua_assert(argv[i][0] == '-');  /* already checked */
     switch (option) {
       case 'e':  case 'l': {
-        int status;
-        char *extra = argv[i] + 2;  /* both options need an argument */
-        if (*extra == '\0') extra = argv[++i];
-        lua_assert(extra != NULL);
-        status = (option == 'e')
-                 ? dostring(L, extra, "=(command line)")
-                 : dolibrary(L, extra);
-        if (status != LUA_OK) return 0;
-        break;
+	int status;
+	char *extra = argv[i] + 2;  /* both options need an argument */
+	if (*extra == '\0') extra = argv[++i];
+	lua_assert(extra != NULL);
+	status = (option == 'e')
+		 ? dostring(L, extra, "=(command line)")
+		 : dolibrary(L, extra);
+	if (status != LUA_OK) return 0;
+	break;
       }
       case 'W':
-        lua_warning(L, "@on", 0);  /* warnings on */
-        break;
+	lua_warning(L, "@on", 0);  /* warnings on */
+	break;
     }
   }
   return 1;
@@ -411,12 +411,12 @@ static int handle_luainit (lua_State *L) {
 */
 
 #if !defined(LUA_PROMPT)
-#define LUA_PROMPT		"> "
-#define LUA_PROMPT2		">> "
+#define LUA_PROMPT    "> "
+#define LUA_PROMPT2   ">> "
 #endif
 
 #if !defined(LUA_MAXINPUT)
-#define LUA_MAXINPUT		512
+#define LUA_MAXINPUT    512
 #endif
 
 
@@ -424,28 +424,28 @@ static int handle_luainit (lua_State *L) {
 ** lua_stdin_is_tty detects whether the standard input is a 'tty' (that
 ** is, whether we're running lua interactively).
 */
-#if !defined(lua_stdin_is_tty)	/* { */
+#if !defined(lua_stdin_is_tty)  /* { */
 
-#if defined(LUA_USE_POSIX)	/* { */
+#if defined(LUA_USE_POSIX)  /* { */
 
 #include <unistd.h>
-#define lua_stdin_is_tty()	isatty(0)
+#define lua_stdin_is_tty()  isatty(0)
 
-#elif defined(LUA_USE_WINDOWS)	/* }{ */
+#elif defined(LUA_USE_WINDOWS)  /* }{ */
 
 #include <io.h>
 #include <windows.h>
 
-#define lua_stdin_is_tty()	_isatty(_fileno(stdin))
+#define lua_stdin_is_tty()  _isatty(_fileno(stdin))
 
-#else				/* }{ */
+#else       /* }{ */
 
 /* ISO C definition */
-#define lua_stdin_is_tty()	1  /* assume stdin is a tty */
+#define lua_stdin_is_tty()  1  /* assume stdin is a tty */
 
-#endif				/* } */
+#endif        /* } */
 
-#endif				/* } */
+#endif        /* } */
 
 
 /*
@@ -456,21 +456,21 @@ static int handle_luainit (lua_State *L) {
 ** * lua_freeline defines how to free a line read by lua_readline.
 */
 
-#if !defined(lua_readline)	/* { */
+#if !defined(lua_readline)  /* { */
 /* Otherwise, all previously listed functions should be defined. */
 
-#if defined(LUA_USE_READLINE)	/* { */
+#if defined(LUA_USE_READLINE) /* { */
 /* Lua will be linked with '-lreadline' */
 
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define lua_initreadline(L)	((void)L, rl_readline_name="lua")
-#define lua_readline(buff,prompt)	((void)buff, readline(prompt))
-#define lua_saveline(line)	add_history(line)
-#define lua_freeline(line)	free(line)
+#define lua_initreadline(L) ((void)L, rl_readline_name="lua")
+#define lua_readline(buff,prompt) ((void)buff, readline(prompt))
+#define lua_saveline(line)  add_history(line)
+#define lua_freeline(line)  free(line)
 
-#else		/* }{ */
+#else   /* }{ */
 /* use dynamically loaded readline (or nothing) */
 
 /* pointer to 'readline' function (if any) */
@@ -507,7 +507,7 @@ static void lua_freeline (char *line) {
 }
 
 
-#if defined(LUA_USE_DLOPEN) && defined(LUA_READLINELIB)		/* { */
+#if defined(LUA_USE_DLOPEN) && defined(LUA_READLINELIB)   /* { */
 /* try to load 'readline' dynamically */
 
 #include <dlfcn.h>
@@ -533,17 +533,17 @@ static void lua_initreadline (lua_State *L) {
   lua_warning(L, "'", 0);
 }
 
-#else		/* }{ */
+#else   /* }{ */
 /* no dlopen or LUA_READLINELIB undefined */
 
 /* Leave pointers with NULL */
-#define lua_initreadline(L)	((void)L)
+#define lua_initreadline(L) ((void)L)
 
-#endif		/* } */
+#endif    /* } */
 
-#endif				/* } */
+#endif        /* } */
 
-#endif				/* } */
+#endif        /* } */
 
 
 /*
@@ -562,8 +562,8 @@ static const char *get_prompt (lua_State *L, int firstline) {
 }
 
 /* mark in error messages for incomplete statements */
-#define EOFMARK		"<eof>"
-#define marklen		(sizeof(EOFMARK)/sizeof(char) - 1)
+#define EOFMARK   "<eof>"
+#define marklen   (sizeof(EOFMARK)/sizeof(char) - 1)
 
 
 /*
@@ -686,7 +686,7 @@ static void l_print (lua_State *L) {
     lua_insert(L, 1);
     if (lua_pcall(L, n, 0, 0) != LUA_OK)
       l_message(progname, lua_pushfstring(L, "error calling 'print' (%s)",
-                                             lua_tostring(L, -1)));
+					     lua_tostring(L, -1)));
   }
 }
 
