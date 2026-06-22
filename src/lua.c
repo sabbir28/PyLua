@@ -281,6 +281,7 @@ static int handle_script (lua_State *L, char **argv) {
 #define has_v   4 /* -v */
 #define has_e   8 /* -e */
 #define has_E   16  /* -E */
+#define has_engine 32 /* -engine */
 
 
 /*
@@ -331,6 +332,12 @@ static int collectargs (char **argv, int *first) {
 	args |= has_v;
 	break;
       case 'e':
+        if (strcmp(argv[i], "-engine") == 0) {
+            if (argv[i+1] == NULL) return has_error;
+            args |= has_engine;
+            i++; /* skip 'animation' */
+            break;
+        }
 	args |= has_e;  /* FALLTHROUGH */
       case 'l':  /* both options need an argument */
 	if (argv[i][2] == '\0') {  /* no concatenated argument? */
@@ -748,6 +755,14 @@ static int pmain (lua_State *L) {
   }
   else
     l_getenv = &getenv;
+  
+  if (args & has_engine) {
+      /* Launch Engine Editor or specific engine mode */
+      extern int engine_launch_editor(lua_State *L, const char *mode);
+      luai_openlibs(L);
+      return engine_launch_editor(L, argv[script + 1]);
+  }
+
   luai_openlibs(L);  /* open standard libraries */
   createargtable(L, argv, argc, script);  /* create table 'arg' */
   lua_gc(L, LUA_GCRESTART);  /* start GC... */

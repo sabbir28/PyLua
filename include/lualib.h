@@ -70,6 +70,10 @@ LUAMOD_API int (luaopen_request) (lua_State *L);
 #define LUA_HASHK	(LUA_REQK << 1)
 LUAMOD_API int (luaopen_hash) (lua_State *L);
 
+#define LUA_ENGINENAME	"engine"
+#define LUA_ENGINEK		(LUA_HASHK << 1)
+LUAMOD_API int (luaopen_engine) (lua_State *L);
+
 
 /* open selected libraries */
 LUALIB_API void (luaL_openselectedlibs) (lua_State *L, int load, int preload);

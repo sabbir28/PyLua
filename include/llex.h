@@ -37,6 +37,7 @@ enum RESERVED {
   TK_REPEAT, TK_RETURN, TK_THEN, TK_TRUE, TK_UNTIL, TK_WHILE,
   TK_EMU,
   TK_CLASS,
+  TK_IMPORT,
   /* other terminal symbols */
   TK_IDIV, TK_CONCAT, TK_DOTS, TK_EQ, TK_GE, TK_LE, TK_NE,
   TK_SHL, TK_SHR,
@@ -45,7 +46,7 @@ enum RESERVED {
 };
 
 /* number of reserved words */
-#define NUM_RESERVED	(cast_int(TK_CLASS-FIRST_RESERVED + 1))
+#define NUM_RESERVED	(cast_int(TK_IMPORT-FIRST_RESERVED + 1))
 
 
 typedef union {

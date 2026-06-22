@@ -41,7 +41,10 @@ set(PYLUA_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/memory/lmem.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/lobject.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/bytecode/lopcodes.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/lparser.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/impl/lparser_core.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/impl/lparser_expr.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/impl/lparser_stat.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/impl/lparser_ctrl.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lstate.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/bytecode/lstring.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/bytecode/ltable.c
@@ -62,8 +65,43 @@ set(PYLUA_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lcorolib.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lveclib.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lhashlib.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Window/Engine_Window.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Physics/Engine_Physics.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Graphics/Engine_Graphics.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Input/Engine_Input.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Audio/Engine_Audio.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/UI/Engine_UI.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Assets/Engine_Assets.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Animation/Engine_Animation.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Tools/Engine_Editor.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/linit.c
 )
+
+# ============================================================================
+# Dependencies
+# ============================================================================
+
+include(FetchContent)
+FetchContent_Declare(
+        glfw
+        GIT_REPOSITORY https://github.com/glfw/glfw.git
+        GIT_TAG 3.3.8
+)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DLL ON CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(glfw)
+
+FetchContent_Declare(
+        stb
+        GIT_REPOSITORY https://github.com/nothings/stb.git
+        GIT_TAG master
+)
+FetchContent_MakeAvailable(stb)
 
 
 if (WIN32)
@@ -96,7 +134,21 @@ target_include_directories(
         pylua_static
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${stb_SOURCE_DIR}
+        src/libraries/Engine/Window
+        src/libraries/Engine/Physics
+        src/libraries/Engine/Assets
 )
+
+target_link_libraries(
+        pylua_static
+        PUBLIC
+        glfw
+)
+
+if (WIN32)
+    target_link_libraries(pylua_static PUBLIC winmm)
+endif()
 
 if (WIN32)
     target_compile_definitions(
@@ -143,12 +195,14 @@ if (WIN32)
             pylua
             PRIVATE
             pylua_static
+            glfw
+            opengl32
             user32
             gdi32
             comctl32
             winhttp
     )
-elseif (ANDROID)
+elif (ANDROID)
     target_link_libraries(
             pylua
             PRIVATE
