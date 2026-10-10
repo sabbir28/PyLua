@@ -124,6 +124,7 @@ void dbg_mouse_button_callback(GLFWwindow *window, int button, int action, int m
             g_dbg.mouse_left_down = 0;
             g_dbg.disasm_sb_dragging = 0;
             g_dbg.reg_sb_dragging = 0;
+            g_dbg.k_sb_dragging = 0;
             g_dbg.log_sb_dragging = 0;
             g_dbg.src_sb_dragging = 0;
         }
@@ -143,8 +144,14 @@ void dbg_scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
             g_dbg.disasm_scroll_pc -= (int)(yoffset * 3.0);
             if (g_dbg.disasm_scroll_pc < 0) g_dbg.disasm_scroll_pc = 0;
         } else {
-            g_dbg.reg_scroll -= (int)(yoffset * 2.0);
-            if (g_dbg.reg_scroll < 0) g_dbg.reg_scroll = 0;
+            /* Right panel: check whether cursor is over Constants Pool or Registers */
+            if (g_dbg.mouse_y >= 350.0) {
+                g_dbg.k_scroll -= (int)(yoffset * 2.0);
+                if (g_dbg.k_scroll < 0) g_dbg.k_scroll = 0;
+            } else {
+                g_dbg.reg_scroll -= (int)(yoffset * 2.0);
+                if (g_dbg.reg_scroll < 0) g_dbg.reg_scroll = 0;
+            }
         }
     } else if (g_dbg.active_tab == TAB_LOG) {
         g_dbg.log_scroll -= (int)(yoffset * 3.0);

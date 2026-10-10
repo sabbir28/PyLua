@@ -386,26 +386,40 @@ void render_debugger_gui(lua_State *L) {
 
         /* Section 1: Virtual Registers (R0..RN) */
         float right_y = main_y;
+        float rsb_w = 12.0f;
+        float r_content_w = 440.0f - rsb_w;
+        float rsb_x = (float)g_dbg.win_w - rsb_w;
+
         dbg_draw_rect(split_x, right_y, 440, 22, 0.17f, 0.17f, 0.21f, 1.0f);
         dbg_draw_line(split_x, right_y + 22, (float)g_dbg.win_w, right_y + 22, 1.0f, 0.25f, 0.25f, 0.28f, 1.0f);
         dbg_draw_text(split_x + 10, right_y + 6, "REGISTERS (R0 .. RN)", 0.3f, 0.85f, 1.0f, 1.15f);
 
-        right_y += 24.0f;
+        float r_start_y = right_y + 24.0f;
         int max_regs = (g_dbg.current_proto) ? g_dbg.current_proto->maxstacksize : 16;
-        if (max_regs > 32) max_regs = 32;
+        if (max_regs > 256) max_regs = 256;
+        if (max_regs < 16) max_regs = 16;
 
         CallInfo *ci = L->ci;
         StkId base = (ci && isLua(ci)) ? (ci->func.p + 1) : NULL;
 
-        float reg_box_h = 240.0f;
+        float reg_box_h = (main_h > 600.0f) ? (main_h - 120.0f) * 0.48f : 240.0f;
         int visible_regs = (int)(reg_box_h / 20.0f);
+        float rsb_y = r_start_y;
+        float rsb_h = (float)visible_regs * 20.0f;
+
+        int max_reg_scroll = max_regs - visible_regs;
+        if (max_reg_scroll < 0) max_reg_scroll = 0;
+
+        if (g_dbg.reg_scroll > max_reg_scroll) g_dbg.reg_scroll = max_reg_scroll;
+        if (g_dbg.reg_scroll < 0) g_dbg.reg_scroll = 0;
+
         for (int r = 0; r < visible_regs; r++) {
             int reg_idx = g_dbg.reg_scroll + r;
             if (reg_idx >= max_regs) break;
-            float r_row_y = right_y + (float)r * 20.0f;
+            float r_row_y = r_start_y + (float)r * 20.0f;
 
             if (r % 2 == 1) {
-                dbg_draw_rect(split_x, r_row_y, 440, 20, 0.14f, 0.14f, 0.16f, 1.0f);
+                dbg_draw_rect(split_x, r_row_y, r_content_w, 20, 0.14f, 0.14f, 0.16f, 1.0f);
             }
 
             char r_lbl[32];
@@ -417,33 +431,111 @@ void render_debugger_gui(lua_State *L) {
                 char val_str[128];
                 format_tvalue(val_str, sizeof(val_str), val);
                 const char *type_name = get_tvalue_typename(val);
-                dbg_draw_text(split_x + 80, r_row_y + 4, val_str, 0.9f, 0.9f, 0.95f, 1.15f);
+                dbg_draw_text(split_x + 75, r_row_y + 4, val_str, 0.9f, 0.9f, 0.95f, 1.15f);
 
                 char t_str[32];
                 snprintf(t_str, sizeof(t_str), "(%s)", type_name);
-                dbg_draw_text(split_x + 320, r_row_y + 4, t_str, 0.5f, 0.75f, 0.6f, 1.05f);
+                dbg_draw_text(split_x + 300, r_row_y + 4, t_str, 0.5f, 0.75f, 0.6f, 1.05f);
             } else {
-                dbg_draw_text(split_x + 80, r_row_y + 4, "nil / empty", 0.45f, 0.45f, 0.5f, 1.15f);
+                dbg_draw_text(split_x + 75, r_row_y + 4, "nil", 0.45f, 0.45f, 0.5f, 1.15f);
+                dbg_draw_text(split_x + 300, r_row_y + 4, "(nil)", 0.4f, 0.4f, 0.45f, 1.05f);
             }
         }
 
-        /* Section 2: Constants Pool (K0..KM) */
-        right_y += reg_box_h + 5.0f;
-        dbg_draw_rect(split_x, right_y, 440, 22, 0.17f, 0.17f, 0.21f, 1.0f);
-        dbg_draw_line(split_x, right_y + 22, (float)g_dbg.win_w, right_y + 22, 1.0f, 0.25f, 0.25f, 0.28f, 1.0f);
-        dbg_draw_text(split_x + 10, right_y + 6, "CONSTANTS POOL (K0 .. KM)", 0.4f, 0.9f, 0.5f, 1.15f);
+        /* Register Scrollbar */
+        dbg_draw_rect(rsb_x, rsb_y, rsb_w, rsb_h, 0.12f, 0.12f, 0.14f, 1.0f);
+        dbg_draw_line(rsb_x, rsb_y, rsb_x, rsb_y + rsb_h, 1.0f, 0.22f, 0.22f, 0.26f, 1.0f);
 
-        right_y += 24.0f;
+        if (max_regs > 0 && max_reg_scroll > 0) {
+            float r_ratio = (float)visible_regs / (float)max_regs;
+            float r_thumb_h = rsb_h * r_ratio;
+            if (r_thumb_h < 22.0f) r_thumb_h = 22.0f;
+            if (r_thumb_h > rsb_h - 4.0f) r_thumb_h = rsb_h - 4.0f;
+            float r_avail_h = rsb_h - r_thumb_h;
+
+            if (g_dbg.reg_sb_dragging) {
+                if (g_dbg.mouse_left_down) {
+                    float new_thumb_y = (float)g_dbg.mouse_y - g_dbg.reg_sb_drag_offset_y;
+                    float s_ratio = (new_thumb_y - rsb_y) / r_avail_h;
+                    if (s_ratio < 0.0f) s_ratio = 0.0f;
+                    if (s_ratio > 1.0f) s_ratio = 1.0f;
+                    g_dbg.reg_scroll = (int)(s_ratio * (float)max_reg_scroll + 0.5f);
+                } else {
+                    g_dbg.reg_sb_dragging = 0;
+                }
+            }
+
+            if (g_dbg.reg_scroll > max_reg_scroll) g_dbg.reg_scroll = max_reg_scroll;
+            if (g_dbg.reg_scroll < 0) g_dbg.reg_scroll = 0;
+
+            float r_scroll_ratio = (float)g_dbg.reg_scroll / (float)max_reg_scroll;
+            if (r_scroll_ratio < 0.0f) r_scroll_ratio = 0.0f;
+            if (r_scroll_ratio > 1.0f) r_scroll_ratio = 1.0f;
+            float r_thumb_y = rsb_y + r_avail_h * r_scroll_ratio;
+
+            int mouse_in_rsb = (g_dbg.mouse_x >= rsb_x && g_dbg.mouse_x <= (float)g_dbg.win_w &&
+                                g_dbg.mouse_y >= rsb_y && g_dbg.mouse_y <= rsb_y + rsb_h);
+            if (mouse_in_rsb && g_dbg.mouse_left_pressed) {
+                if (g_dbg.mouse_y >= r_thumb_y && g_dbg.mouse_y <= r_thumb_y + r_thumb_h) {
+                    g_dbg.reg_sb_dragging = 1;
+                    g_dbg.reg_sb_drag_offset_y = (float)g_dbg.mouse_y - r_thumb_y;
+                } else if (g_dbg.mouse_y < r_thumb_y) {
+                    g_dbg.reg_scroll -= visible_regs;
+                    if (g_dbg.reg_scroll < 0) g_dbg.reg_scroll = 0;
+                } else {
+                    g_dbg.reg_scroll += visible_regs;
+                    if (g_dbg.reg_scroll > max_reg_scroll) g_dbg.reg_scroll = max_reg_scroll;
+                }
+            }
+
+            int hover_rthumb = (g_dbg.mouse_x >= rsb_x && g_dbg.mouse_x <= (float)g_dbg.win_w &&
+                                g_dbg.mouse_y >= r_thumb_y && g_dbg.mouse_y <= r_thumb_y + r_thumb_h);
+            float rtr, rtg, rtb;
+            if (g_dbg.reg_sb_dragging) {
+                rtr = 0.0f; rtg = 0.65f; rtb = 1.0f;
+            } else if (hover_rthumb) {
+                rtr = 0.45f; rtg = 0.48f; rtb = 0.55f;
+            } else {
+                rtr = 0.28f; rtg = 0.29f; rtb = 0.34f;
+            }
+
+            dbg_draw_rect(rsb_x + 2.0f, r_thumb_y + 1.0f, rsb_w - 4.0f, r_thumb_h - 2.0f, rtr, rtg, rtb, 1.0f);
+            dbg_draw_rect_outline(rsb_x + 2.0f, r_thumb_y + 1.0f, rsb_w - 4.0f, r_thumb_h - 2.0f, 1.0f,
+                                  rtr * 1.2f, rtg * 1.2f, rtb * 1.2f, 1.0f);
+        } else {
+            dbg_draw_rect(rsb_x + 2.0f, rsb_y + 1.0f, rsb_w - 4.0f, rsb_h - 2.0f, 0.18f, 0.19f, 0.22f, 1.0f);
+        }
+
+        /* Section 2: Constants Pool (K0..KM) */
+        float const_hdr_y = rsb_y + rsb_h + 6.0f;
+        float ksb_w = 12.0f;
+        float k_content_w = 440.0f - ksb_w;
+        float ksb_x = (float)g_dbg.win_w - ksb_w;
+
+        dbg_draw_rect(split_x, const_hdr_y, 440, 22, 0.17f, 0.17f, 0.21f, 1.0f);
+        dbg_draw_line(split_x, const_hdr_y + 22, (float)g_dbg.win_w, const_hdr_y + 22, 1.0f, 0.25f, 0.25f, 0.28f, 1.0f);
+        dbg_draw_text(split_x + 10, const_hdr_y + 6, "CONSTANTS POOL (K0 .. KM)", 0.4f, 0.9f, 0.5f, 1.15f);
+
+        float k_start_y = const_hdr_y + 24.0f;
         int num_k = (g_dbg.current_proto) ? g_dbg.current_proto->sizek : 0;
-        float k_box_h = 160.0f;
+        float k_box_h = (main_h > 600.0f) ? (main_h - 120.0f) * 0.32f : 160.0f;
         int visible_k = (int)(k_box_h / 20.0f);
+        float ksb_y = k_start_y;
+        float ksb_h = (float)visible_k * 20.0f;
+
+        int max_k_scroll = num_k - visible_k;
+        if (max_k_scroll < 0) max_k_scroll = 0;
+
+        if (g_dbg.k_scroll > max_k_scroll) g_dbg.k_scroll = max_k_scroll;
+        if (g_dbg.k_scroll < 0) g_dbg.k_scroll = 0;
+
         for (int k = 0; k < visible_k; k++) {
             int k_idx = g_dbg.k_scroll + k;
             if (k_idx >= num_k) break;
-            float k_row_y = right_y + (float)k * 20.0f;
+            float k_row_y = k_start_y + (float)k * 20.0f;
 
             if (k % 2 == 1) {
-                dbg_draw_rect(split_x, k_row_y, 440, 20, 0.14f, 0.14f, 0.16f, 1.0f);
+                dbg_draw_rect(split_x, k_row_y, k_content_w, 20, 0.14f, 0.14f, 0.16f, 1.0f);
             }
 
             char k_lbl[32];
@@ -454,20 +546,84 @@ void render_debugger_gui(lua_State *L) {
                 TValue *kv = &g_dbg.current_proto->k[k_idx];
                 char val_str[128];
                 format_tvalue(val_str, sizeof(val_str), kv);
-                dbg_draw_text(split_x + 80, k_row_y + 4, val_str, 0.85f, 0.85f, 0.9f, 1.15f);
+                dbg_draw_text(split_x + 75, k_row_y + 4, val_str, 0.85f, 0.85f, 0.9f, 1.15f);
             }
         }
 
-        /* Section 3: Upvalues & Call Stack Summary */
-        right_y += k_box_h + 5.0f;
-        dbg_draw_rect(split_x, right_y, 440, 22, 0.17f, 0.17f, 0.21f, 1.0f);
-        dbg_draw_line(split_x, right_y + 22, (float)g_dbg.win_w, right_y + 22, 1.0f, 0.25f, 0.25f, 0.28f, 1.0f);
-        dbg_draw_text(split_x + 10, right_y + 6, "UPVALUES & CALL STACK", 0.95f, 0.5f, 0.85f, 1.15f);
+        /* Constants Pool Scrollbar */
+        dbg_draw_rect(ksb_x, ksb_y, ksb_w, ksb_h, 0.12f, 0.12f, 0.14f, 1.0f);
+        dbg_draw_line(ksb_x, ksb_y, ksb_x, ksb_y + ksb_h, 1.0f, 0.22f, 0.22f, 0.26f, 1.0f);
 
-        right_y += 24.0f;
+        if (num_k > 0 && max_k_scroll > 0) {
+            float k_ratio = (float)visible_k / (float)num_k;
+            float k_thumb_h = ksb_h * k_ratio;
+            if (k_thumb_h < 22.0f) k_thumb_h = 22.0f;
+            if (k_thumb_h > ksb_h - 4.0f) k_thumb_h = ksb_h - 4.0f;
+            float k_avail_h = ksb_h - k_thumb_h;
+
+            if (g_dbg.k_sb_dragging) {
+                if (g_dbg.mouse_left_down) {
+                    float new_thumb_y = (float)g_dbg.mouse_y - g_dbg.k_sb_drag_offset_y;
+                    float s_ratio = (new_thumb_y - ksb_y) / k_avail_h;
+                    if (s_ratio < 0.0f) s_ratio = 0.0f;
+                    if (s_ratio > 1.0f) s_ratio = 1.0f;
+                    g_dbg.k_scroll = (int)(s_ratio * (float)max_k_scroll + 0.5f);
+                } else {
+                    g_dbg.k_sb_dragging = 0;
+                }
+            }
+
+            if (g_dbg.k_scroll > max_k_scroll) g_dbg.k_scroll = max_k_scroll;
+            if (g_dbg.k_scroll < 0) g_dbg.k_scroll = 0;
+
+            float k_scroll_ratio = (float)g_dbg.k_scroll / (float)max_k_scroll;
+            if (k_scroll_ratio < 0.0f) k_scroll_ratio = 0.0f;
+            if (k_scroll_ratio > 1.0f) k_scroll_ratio = 1.0f;
+            float k_thumb_y = ksb_y + k_avail_h * k_scroll_ratio;
+
+            int mouse_in_ksb = (g_dbg.mouse_x >= ksb_x && g_dbg.mouse_x <= (float)g_dbg.win_w &&
+                                g_dbg.mouse_y >= ksb_y && g_dbg.mouse_y <= ksb_y + ksb_h);
+            if (mouse_in_ksb && g_dbg.mouse_left_pressed) {
+                if (g_dbg.mouse_y >= k_thumb_y && g_dbg.mouse_y <= k_thumb_y + k_thumb_h) {
+                    g_dbg.k_sb_dragging = 1;
+                    g_dbg.k_sb_drag_offset_y = (float)g_dbg.mouse_y - k_thumb_y;
+                } else if (g_dbg.mouse_y < k_thumb_y) {
+                    g_dbg.k_scroll -= visible_k;
+                    if (g_dbg.k_scroll < 0) g_dbg.k_scroll = 0;
+                } else {
+                    g_dbg.k_scroll += visible_k;
+                    if (g_dbg.k_scroll > max_k_scroll) g_dbg.k_scroll = max_k_scroll;
+                }
+            }
+
+            int hover_kthumb = (g_dbg.mouse_x >= ksb_x && g_dbg.mouse_x <= (float)g_dbg.win_w &&
+                                g_dbg.mouse_y >= k_thumb_y && g_dbg.mouse_y <= k_thumb_y + k_thumb_h);
+            float ktr, ktg, ktb;
+            if (g_dbg.k_sb_dragging) {
+                ktr = 0.0f; ktg = 0.65f; ktb = 1.0f;
+            } else if (hover_kthumb) {
+                ktr = 0.45f; ktg = 0.48f; ktb = 0.55f;
+            } else {
+                ktr = 0.28f; ktg = 0.29f; ktb = 0.34f;
+            }
+
+            dbg_draw_rect(ksb_x + 2.0f, k_thumb_y + 1.0f, ksb_w - 4.0f, k_thumb_h - 2.0f, ktr, ktg, ktb, 1.0f);
+            dbg_draw_rect_outline(ksb_x + 2.0f, k_thumb_y + 1.0f, ksb_w - 4.0f, k_thumb_h - 2.0f, 1.0f,
+                                  ktr * 1.2f, ktg * 1.2f, ktb * 1.2f, 1.0f);
+        } else {
+            dbg_draw_rect(ksb_x + 2.0f, ksb_y + 1.0f, ksb_w - 4.0f, ksb_h - 2.0f, 0.18f, 0.19f, 0.22f, 1.0f);
+        }
+
+        /* Section 3: Upvalues & Call Stack Summary */
+        float up_hdr_y = ksb_y + ksb_h + 6.0f;
+        dbg_draw_rect(split_x, up_hdr_y, 440, 22, 0.17f, 0.17f, 0.21f, 1.0f);
+        dbg_draw_line(split_x, up_hdr_y + 22, (float)g_dbg.win_w, up_hdr_y + 22, 1.0f, 0.25f, 0.25f, 0.28f, 1.0f);
+        dbg_draw_text(split_x + 10, up_hdr_y + 6, "UPVALUES & CALL STACK", 0.95f, 0.5f, 0.85f, 1.15f);
+
+        float up_start_y = up_hdr_y + 24.0f;
         int num_ups = (g_dbg.current_proto) ? g_dbg.current_proto->sizeupvalues : 0;
         for (int u = 0; u < num_ups && u < 6; u++) {
-            float u_row_y = right_y + (float)u * 20.0f;
+            float u_row_y = up_start_y + (float)u * 20.0f;
             char u_lbl[64];
             const char *uname = (g_dbg.current_proto->upvalues[u].name) ? getstr(g_dbg.current_proto->upvalues[u].name) : "(unnamed)";
             snprintf(u_lbl, sizeof(u_lbl), "Up[%d] %s (instack=%d, idx=%d)", u, uname,

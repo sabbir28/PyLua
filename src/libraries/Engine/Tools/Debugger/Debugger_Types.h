@@ -135,6 +135,8 @@ typedef struct {
     float disasm_sb_drag_offset_y;
     int reg_sb_dragging;
     float reg_sb_drag_offset_y;
+    int k_sb_dragging;
+    float k_sb_drag_offset_y;
     int log_sb_dragging;
     float log_sb_drag_offset_y;
     int src_sb_dragging;

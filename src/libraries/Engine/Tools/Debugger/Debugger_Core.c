@@ -38,6 +38,8 @@ void dbg_state_init(GLFWwindow *window, const char *script_path) {
     g_dbg.disasm_sb_drag_offset_y = 0.0f;
     g_dbg.reg_sb_dragging = 0;
     g_dbg.reg_sb_drag_offset_y = 0.0f;
+    g_dbg.k_sb_dragging = 0;
+    g_dbg.k_sb_drag_offset_y = 0.0f;
     g_dbg.log_sb_dragging = 0;
     g_dbg.log_sb_drag_offset_y = 0.0f;
     g_dbg.src_sb_dragging = 0;
