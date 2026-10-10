@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compiler Pipeline - PyLua Documentation</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Navbar -->
+  <header class="navbar">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="../index.html" class="nav-brand">
+        <span class="logo-badge">PyLua</span>
+        <span>Docs</span>
+      </a>
+    </div>
+
+    <div class="nav-search-container">
+      <input type="text" id="docSearch" placeholder="Search documentation, syntax, opcodes, APIs... (Press '/' to focus)" autocomplete="off">
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="https://github.com/sabbir28/PyLua" target="_blank" rel="noreferrer" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 600;">GitHub</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Language Syntax</div>
+        <a href="../syntax/index.html" class="sidebar-link">1. Lexical Structure</a>
+        <a href="../syntax/types.html" class="sidebar-link">2. Type System</a>
+        <a href="../syntax/variables.html" class="sidebar-link">3. Variables & Scope</a>
+        <a href="../syntax/control-flow.html" class="sidebar-link">4. Control Flow</a>
+        <a href="../syntax/operators.html" class="sidebar-link">5. Operators & Expressions</a>
+        <a href="../syntax/functions.html" class="sidebar-link">6. Functions & Closures</a>
+        <a href="../syntax/modules.html" class="sidebar-link">7. Modules & Imports</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Compiler & VM Runtime</div>
+        <a href="index.html" class="sidebar-link active">1. Compiler Pipeline</a>
+        <a href="bytecode-vm.html" class="sidebar-link">2. Register-Based VM</a>
+        <a href="opcodes.html" class="sidebar-link">3. Opcode Reference</a>
+        <a href="gc-memory.html" class="sidebar-link">4. Garbage Collector</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Standard Libraries</div>
+        <a href="../standard-library/index.html" class="sidebar-link">Overview</a>
+        <a href="../standard-library/base.html" class="sidebar-link">Base Built-ins</a>
+        <a href="../standard-library/vector.html" class="sidebar-link">Vector Math (2D/3D)</a>
+        <a href="../standard-library/string-utf8.html" class="sidebar-link">String & UTF-8</a>
+        <a href="../standard-library/table.html" class="sidebar-link">Table Manipulation</a>
+        <a href="../standard-library/math.html" class="sidebar-link">Math & Numeric</a>
+        <a href="../standard-library/io-os.html" class="sidebar-link">I/O & Operating System</a>
+        <a href="../standard-library/request.html" class="sidebar-link">HTTP Networking</a>
+        <a href="../standard-library/gui.html" class="sidebar-link">Native GUI</a>
+        <a href="../standard-library/hash.html" class="sidebar-link">Cryptography & Hash</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">2D Game Engine (LEngine)</div>
+        <a href="../engine/index.html" class="sidebar-link">Engine Overview</a>
+        <a href="../engine/window.html" class="sidebar-link">Window Subsystem</a>
+        <a href="../engine/graphics.html" class="sidebar-link">Graphics & Rendering</a>
+        <a href="../engine/physics.html" class="sidebar-link">Physics Simulation</a>
+        <a href="../engine/audio.html" class="sidebar-link">Audio Subsystem</a>
+        <a href="../engine/input.html" class="sidebar-link">Input & Events</a>
+        <a href="../engine/ui.html" class="sidebar-link">In-Game UI</a>
+        <a href="../engine/animation.html" class="sidebar-link">Sprite Animation</a>
+        <a href="../engine/entity.html" class="sidebar-link">Entity-Script Model</a>
+        <a href="../engine/workers.html" class="sidebar-link">Multithreaded Workers</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div class="breadcrumbs">
+        <a href="../index.html">Docs</a>
+        <span class="sep">/</span>
+        <a href="index.html">Runtime</a>
+        <span class="sep">/</span>
+        <span>Compiler Pipeline</span>
+      </div>
+
+      <h1>The PyLua Compiler Pipeline</h1>
+      <p class="lead">
+        A deep architectural tour of how PyLua transforms raw UTF-8 source code into highly optimized bytecode prototypes through its single-pass compiler in <code>src/parser/</code>.
+      </p>
+
+      <section class="doc-section">
+        <h2>1. Single-Pass Compilation Architecture</h2>
+        <p>
+          Unlike heavyweight compilers that construct large Abstract Syntax Tree (AST) node graphs in memory, PyLua employs a <strong>single-pass recursive descent compiler</strong>. Code is emitted directly to bytecode instruction arrays during parsing, allowing PyLua to compile millions of lines of code per second while consuming virtually zero compilation heap memory.
+        </p>
+
+        <div class="diagram-box">
+<pre>
+┌────────────────────────┐
+│  Source File (.lua)    │
+└───────────┬────────────┘
+            │ Byte Stream (ZIO buffer)
+            ▼
+┌────────────────────────┐
+│      llex.c            │ ──▶ Tokenizes keywords, literals, braces {}, and operators
+│   Lexical Scanner      │     Interns strings into global string cache (global_State.strt)
+└───────────┬────────────┘
+            │ Token Stream (Token: TK_IF, TK_IMPORT, TK_NAME, etc.)
+            ▼
+┌────────────────────────┐
+│   lparser_*.c          │ ──▶ Recursive descent parser:
+│  Syntax & Scoping      │     • Manages FuncState and BlockCnt scope chains
+└───────────┬────────────┘     • Performs Auto-Local register allocation
+            │ Expression Descriptors (expdesc)
+            ▼
+┌────────────────────────┐
+│       lcode.c          │ ──▶ Code Generator:
+│    Code Generator      │     • Constant folding (e.g., 2 + 2 ──▶ 4 at compile time)
+└───────────┬────────────┘     • Emits 32-bit VM opcodes (OP_MOVE, OP_CALL, etc.)
+            │
+            ▼
+┌────────────────────────┐
+│    Proto Object        │ ──▶ Ready for execution in lvm.c or dumping via ldump.c
+│  (Bytecode Prototype)  │
+└────────────────────────┘
+</pre>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>2. Key Compiler Data Structures</h2>
+
+        <h3>1. Lexical State (`LexState`)</h3>
+        <p>
+          Defined in <code>src/parser/llex.h</code>, represents the active parser state during file compilation. Contains current token (<code>ls->t</code>), lookahead token (<code>ls->lookahead</code>), file name, and pointer to active function state.
+        </p>
+
+        <h3>2. Function Compilation State (`FuncState`)</h3>
+        <p>
+          Defined in <code>src/parser/lparser.h</code>. A new <code>FuncState</code> is pushed for every function and nested closure being compiled. It manages:
+        </p>
+        <ul>
+          <li><code>fs->f</code>: The target <code>Proto</code> structure being generated.</li>
+          <li><code>fs->pc</code>: Current program counter (number of emitted instructions).</li>
+          <li><code>fs->freereg</code>: Next available virtual register index in the stack frame.</li>
+          <li><code>fs->nactvar</code>: Number of active local variables in the current function.</li>
+          <li><code>fs->bl</code>: Pointer to innermost active block control structure (<code>BlockCnt</code>).</li>
+          <li><code>fs->jpc</code>: Pending jump list to be patched to the next emitted instruction.</li>
+        </ul>
+
+        <h3>3. Expression Descriptors (`expdesc`)</h3>
+        <p>
+          During parsing, expressions are not evaluated immediately. Instead, they are represented as an <code>expdesc</code> tagged union:
+        </p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Tag (<code>expkind</code>)</th>
+                <th>Meaning</th>
+                <th>When Generated</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>VCONST</code></td>
+                <td>Constant in constant table</td>
+                <td>Literal string, float, or integer</td>
+              </tr>
+              <tr>
+                <td><code>VLOCAL</code></td>
+                <td>Variable in stack register</td>
+                <td>Local variable or auto-local variable</td>
+              </tr>
+              <tr>
+                <td><code>VUPVAL</code></td>
+                <td>Upvalue of enclosing function</td>
+                <td>Variable captured across function scopes</td>
+              </tr>
+              <tr>
+                <td><code>VINDEXED</code></td>
+                <td>Table field lookup <code>t[k]</code></td>
+                <td>Table index expression</td>
+              </tr>
+              <tr>
+                <td><code>VJMP</code></td>
+                <td>Relational jump condition</td>
+                <td>Comparison expressions (e.g., <code>x &gt; 10</code>)</td>
+              </tr>
+              <tr>
+                <td><code>VRELOC</code></td>
+                <td>Instruction that needs a destination</td>
+                <td>Arithmetic or call result</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>3. The Prototype (`Proto`) Object</h2>
+        <p>
+          The output of compilation is a <code>Proto</code> (defined in <code>include/lobject.h</code>). It is an immutable template from which runtime closures (<code>LClosure</code>) are instantiated:
+        </p>
+
+        <div class="diagram-box">
+<pre>
+struct Proto {
+    Instruction *code;       /* Array of 32-bit bytecode instructions */
+    TValue *k;               /* Array of constants used by the function */
+    Proto **p;               /* Array of nested function prototypes */
+    Upvaldesc *upvalues;     /* List of upvalue descriptors */
+    lu_byte numparams;       /* Number of fixed parameters */
+    lu_byte is_vararg;       /* 1 if variadic (...) */
+    lu_byte maxstacksize;    /* Maximum registers required for this function frame */
+    /* Debugging information: lineinfo, locvars, source filename */
+};
+</pre>
+        </div>
+      </section>
+
+      <div class="page-nav">
+        <a href="../syntax/modules.html" class="page-nav-card prev">
+          <span class="page-nav-subtitle">&larr; Previous</span>
+          <span class="page-nav-title">7. Modules & Imports</span>
+        </a>
+        <a href="bytecode-vm.html" class="page-nav-card next">
+          <span class="page-nav-subtitle">Next &rarr;</span>
+          <span class="page-nav-title">2. Register-Based VM</span>
+        </a>
+      </div>
+    </main>
+  </div>
+
+  <script src="../app.js"></script>
+</body>
+</html>

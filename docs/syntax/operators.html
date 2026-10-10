@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Operators & Expressions - PyLua Documentation</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Navbar -->
+  <header class="navbar">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="../index.html" class="nav-brand">
+        <span class="logo-badge">PyLua</span>
+        <span>Docs</span>
+      </a>
+    </div>
+
+    <div class="nav-search-container">
+      <input type="text" id="docSearch" placeholder="Search documentation, syntax, opcodes, APIs... (Press '/' to focus)" autocomplete="off">
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="https://github.com/sabbir28/PyLua" target="_blank" rel="noreferrer" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 600;">GitHub</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Language Syntax</div>
+        <a href="index.html" class="sidebar-link">1. Lexical Structure</a>
+        <a href="types.html" class="sidebar-link">2. Type System</a>
+        <a href="variables.html" class="sidebar-link">3. Variables & Scope</a>
+        <a href="control-flow.html" class="sidebar-link">4. Control Flow</a>
+        <a href="operators.html" class="sidebar-link active">5. Operators & Expressions</a>
+        <a href="functions.html" class="sidebar-link">6. Functions & Closures</a>
+        <a href="modules.html" class="sidebar-link">7. Modules & Imports</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Compiler & VM Runtime</div>
+        <a href="../runtime/index.html" class="sidebar-link">1. Compiler Pipeline</a>
+        <a href="../runtime/bytecode-vm.html" class="sidebar-link">2. Register-Based VM</a>
+        <a href="../runtime/opcodes.html" class="sidebar-link">3. Opcode Reference</a>
+        <a href="../runtime/gc-memory.html" class="sidebar-link">4. Garbage Collector</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Standard Libraries</div>
+        <a href="../standard-library/index.html" class="sidebar-link">Overview</a>
+        <a href="../standard-library/base.html" class="sidebar-link">Base Built-ins</a>
+        <a href="../standard-library/vector.html" class="sidebar-link">Vector Math (2D/3D)</a>
+        <a href="../standard-library/string-utf8.html" class="sidebar-link">String & UTF-8</a>
+        <a href="../standard-library/table.html" class="sidebar-link">Table Manipulation</a>
+        <a href="../standard-library/math.html" class="sidebar-link">Math & Numeric</a>
+        <a href="../standard-library/io-os.html" class="sidebar-link">I/O & Operating System</a>
+        <a href="../standard-library/request.html" class="sidebar-link">HTTP Networking</a>
+        <a href="../standard-library/gui.html" class="sidebar-link">Native GUI</a>
+        <a href="../standard-library/hash.html" class="sidebar-link">Cryptography & Hash</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">2D Game Engine (LEngine)</div>
+        <a href="../engine/index.html" class="sidebar-link">Engine Overview</a>
+        <a href="../engine/window.html" class="sidebar-link">Window Subsystem</a>
+        <a href="../engine/graphics.html" class="sidebar-link">Graphics & Rendering</a>
+        <a href="../engine/physics.html" class="sidebar-link">Physics Simulation</a>
+        <a href="../engine/audio.html" class="sidebar-link">Audio Subsystem</a>
+        <a href="../engine/input.html" class="sidebar-link">Input & Events</a>
+        <a href="../engine/ui.html" class="sidebar-link">In-Game UI</a>
+        <a href="../engine/animation.html" class="sidebar-link">Sprite Animation</a>
+        <a href="../engine/entity.html" class="sidebar-link">Entity-Script Model</a>
+        <a href="../engine/workers.html" class="sidebar-link">Multithreaded Workers</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div class="breadcrumbs">
+        <a href="../index.html">Docs</a>
+        <span class="sep">/</span>
+        <a href="index.html">Syntax</a>
+        <span class="sep">/</span>
+        <span>Operators & Expressions</span>
+      </div>
+
+      <h1>Operators &amp; Expression Evaluation</h1>
+      <p class="lead">
+        PyLua provides modern operators—including native <code>!=</code> inequality, 64-bit bitwise manipulation, floor division, and short-circuit evaluation—along with powerful metamethod customization.
+      </p>
+
+      <section class="doc-section">
+        <h2>1. Relational &amp; Equality Operators</h2>
+        <p>
+          Unlike standard Lua which only provided <code>~=</code>, PyLua natively supports the industry standard <code>!=</code> operator:
+        </p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Operator</th>
+                <th>Operation</th>
+                <th>Example</th>
+                <th>Metamethod</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>==</code></td>
+                <td>Equal to</td>
+                <td><code>a == b</code></td>
+                <td><code>__eq</code></td>
+              </tr>
+              <tr>
+                <td><code>!=</code></td>
+                <td><strong>Not equal to (Modern)</strong></td>
+                <td><code>a != b</code></td>
+                <td><code>__eq</code> (inverted)</td>
+              </tr>
+              <tr>
+                <td><code>~=</code></td>
+                <td>Not equal to (Traditional)</td>
+                <td><code>a ~= b</code></td>
+                <td><code>__eq</code> (inverted)</td>
+              </tr>
+              <tr>
+                <td><code>&lt;</code></td>
+                <td>Less than</td>
+                <td><code>a &lt; b</code></td>
+                <td><code>__lt</code></td>
+              </tr>
+              <tr>
+                <td><code>&lt;=</code></td>
+                <td>Less than or equal to</td>
+                <td><code>a &lt;= b</code></td>
+                <td><code>__le</code></td>
+              </tr>
+              <tr>
+                <td><code>&gt;</code></td>
+                <td>Greater than</td>
+                <td><code>a &gt; b</code></td>
+                <td><code>__lt</code> (swapped)</td>
+              </tr>
+              <tr>
+                <td><code>&gt;=</code></td>
+                <td>Greater than or equal to</td>
+                <td><code>a &gt;= b</code></td>
+                <td><code>__le</code> (swapped)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>2. Arithmetic Operators</h2>
+        <p>
+          PyLua operates on 64-bit IEEE 754 floats and 64-bit signed two's complement integers:
+        </p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>arithmetic_operators.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>print(10 + 3)    <span class="token-comment">-- Addition: 13</span>
+print(10 - 3)    <span class="token-comment">-- Subtraction: 7</span>
+print(10 * 3)    <span class="token-comment">-- Multiplication: 30</span>
+print(10 / 3)    <span class="token-comment">-- Floating division: 3.3333333333333</span>
+print(10 // 3)   <span class="token-comment">-- Floor division: 3 (integer)</span>
+print(10 % 3)    <span class="token-comment">-- Modulo: 1</span>
+print(2 ^ 8)     <span class="token-comment">-- Exponentiation: 256.0</span>
+print(-15)       <span class="token-comment">-- Unary negation</span></code></pre>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>3. 64-Bit Bitwise Operators</h2>
+        <p>
+          Bitwise operators treat operands as 64-bit signed integers:
+        </p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Operator</th>
+                <th>Operation</th>
+                <th>Example</th>
+                <th>Metamethod</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>&amp;</code></td>
+                <td>Bitwise AND</td>
+                <td><code>flags &amp; 0x0F</code></td>
+                <td><code>__band</code></td>
+              </tr>
+              <tr>
+                <td><code>|</code></td>
+                <td>Bitwise OR</td>
+                <td><code>flags | 0x80</code></td>
+                <td><code>__bor</code></td>
+              </tr>
+              <tr>
+                <td><code>~</code> (binary)</td>
+                <td>Bitwise XOR</td>
+                <td><code>val ~ mask</code></td>
+                <td><code>__bxor</code></td>
+              </tr>
+              <tr>
+                <td><code>~</code> (unary)</td>
+                <td>Bitwise NOT</td>
+                <td><code>~mask</code></td>
+                <td><code>__bnot</code></td>
+              </tr>
+              <tr>
+                <td><code>&lt;&lt;</code></td>
+                <td>Left shift</td>
+                <td><code>1 &lt;&lt; 4</code> (16)</td>
+                <td><code>__shl</code></td>
+              </tr>
+              <tr>
+                <td><code>&gt;&gt;</code></td>
+                <td>Logical right shift</td>
+                <td><code>16 &gt;&gt; 2</code> (4)</td>
+                <td><code>__shr</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>4. Logical Short-Circuit Operators: `and`, `or`, `not`</h2>
+        <p>
+          The logical operators <code>and</code> and <code>or</code> use short-circuit evaluation and return the operand value itself, rather than forcing a boolean:
+        </p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>short_circuit.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-comment">-- Default value idiom with 'or':</span>
+displayName = customNickname or "Guest Player"
+
+<span class="token-comment">-- Safe dereference idiom with 'and':</span>
+playerSpeed = player and player.speed
+
+<span class="token-comment">-- Ternary expression idiom (condition and if_true or if_false):</span>
+status = isAlive and "Alive" or "Game Over"</code></pre>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>5. String Concatenation (`..`) &amp; Length (`#`)</h2>
+        <p>
+          The <code>..</code> operator concatenates strings (and numbers, which are coerced to strings). The <code>#</code> operator computes the byte length of strings and the array portion length of tables:
+        </p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>concat_and_len.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>greeting = "Score: " .. 100 .. " points"
+print(greeting)  <span class="token-comment">-- "Score: 100 points"</span>
+
+print(#"Hello")  <span class="token-comment">-- String length: 5</span>
+
+items = { "A", "B", "C" }
+print(#items)    <span class="token-comment">-- Table array length: 3</span></code></pre>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>6. Operator Precedence Table</h2>
+        <p>Listed from highest precedence (binds tightest) to lowest:</p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Precedence</th>
+                <th>Operators</th>
+                <th>Associativity</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1 (Highest)</td>
+                <td><code>^</code></td>
+                <td>Right-to-left</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>Unary <code>not</code>, <code>#</code>, <code>-</code>, <code>~</code></td>
+                <td>Right-to-left</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td><code>*</code>, <code>/</code>, <code>//</code>, <code>%</code></td>
+                <td>Left-to-right</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td><code>+</code>, <code>-</code></td>
+                <td>Left-to-right</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td><code>..</code></td>
+                <td>Right-to-left</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td><code>&lt;&lt;</code>, <code>&gt;&gt;</code></td>
+                <td>Left-to-right</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td><code>&amp;</code></td>
+                <td>Left-to-right</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td><code>~</code> (binary)</td>
+                <td>Left-to-right</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td><code>|</code></td>
+                <td>Left-to-right</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td><code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code>, <code>~=</code>, <code>!=</code>, <code>==</code></td>
+                <td>Left-to-right</td>
+              </tr>
+              <tr>
+                <td>11</td>
+                <td><code>and</code></td>
+                <td>Left-to-right</td>
+              </tr>
+              <tr>
+                <td>12 (Lowest)</td>
+                <td><code>or</code></td>
+                <td>Left-to-right</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="page-nav">
+        <a href="control-flow.html" class="page-nav-card prev">
+          <span class="page-nav-subtitle">&larr; Previous</span>
+          <span class="page-nav-title">4. Control Flow</span>
+        </a>
+        <a href="functions.html" class="page-nav-card next">
+          <span class="page-nav-subtitle">Next &rarr;</span>
+          <span class="page-nav-title">6. Functions & Closures</span>
+        </a>
+      </div>
+    </main>
+  </div>
+
+  <script src="../app.js"></script>
+</body>
+</html>

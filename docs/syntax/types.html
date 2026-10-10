@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Type System & Values - PyLua Documentation</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Navbar -->
+  <header class="navbar">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="../index.html" class="nav-brand">
+        <span class="logo-badge">PyLua</span>
+        <span>Docs</span>
+      </a>
+    </div>
+
+    <div class="nav-search-container">
+      <input type="text" id="docSearch" placeholder="Search documentation, syntax, opcodes, APIs... (Press '/' to focus)" autocomplete="off">
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="https://github.com/sabbir28/PyLua" target="_blank" rel="noreferrer" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 600;">GitHub</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Language Syntax</div>
+        <a href="index.html" class="sidebar-link">1. Lexical Structure</a>
+        <a href="types.html" class="sidebar-link active">2. Type System</a>
+        <a href="variables.html" class="sidebar-link">3. Variables & Scope</a>
+        <a href="control-flow.html" class="sidebar-link">4. Control Flow</a>
+        <a href="operators.html" class="sidebar-link">5. Operators & Expressions</a>
+        <a href="functions.html" class="sidebar-link">6. Functions & Closures</a>
+        <a href="modules.html" class="sidebar-link">7. Modules & Imports</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Compiler & VM Runtime</div>
+        <a href="../runtime/index.html" class="sidebar-link">1. Compiler Pipeline</a>
+        <a href="../runtime/bytecode-vm.html" class="sidebar-link">2. Register-Based VM</a>
+        <a href="../runtime/opcodes.html" class="sidebar-link">3. Opcode Reference</a>
+        <a href="../runtime/gc-memory.html" class="sidebar-link">4. Garbage Collector</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Standard Libraries</div>
+        <a href="../standard-library/index.html" class="sidebar-link">Overview</a>
+        <a href="../standard-library/base.html" class="sidebar-link">Base Built-ins</a>
+        <a href="../standard-library/vector.html" class="sidebar-link">Vector Math (2D/3D)</a>
+        <a href="../standard-library/string-utf8.html" class="sidebar-link">String & UTF-8</a>
+        <a href="../standard-library/table.html" class="sidebar-link">Table Manipulation</a>
+        <a href="../standard-library/math.html" class="sidebar-link">Math & Numeric</a>
+        <a href="../standard-library/io-os.html" class="sidebar-link">I/O & Operating System</a>
+        <a href="../standard-library/request.html" class="sidebar-link">HTTP Networking</a>
+        <a href="../standard-library/gui.html" class="sidebar-link">Native GUI</a>
+        <a href="../standard-library/hash.html" class="sidebar-link">Cryptography & Hash</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">2D Game Engine (LEngine)</div>
+        <a href="../engine/index.html" class="sidebar-link">Engine Overview</a>
+        <a href="../engine/window.html" class="sidebar-link">Window Subsystem</a>
+        <a href="../engine/graphics.html" class="sidebar-link">Graphics & Rendering</a>
+        <a href="../engine/physics.html" class="sidebar-link">Physics Simulation</a>
+        <a href="../engine/audio.html" class="sidebar-link">Audio Subsystem</a>
+        <a href="../engine/input.html" class="sidebar-link">Input & Events</a>
+        <a href="../engine/ui.html" class="sidebar-link">In-Game UI</a>
+        <a href="../engine/animation.html" class="sidebar-link">Sprite Animation</a>
+        <a href="../engine/entity.html" class="sidebar-link">Entity-Script Model</a>
+        <a href="../engine/workers.html" class="sidebar-link">Multithreaded Workers</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div class="breadcrumbs">
+        <a href="../index.html">Docs</a>
+        <span class="sep">/</span>
+        <a href="index.html">Syntax</a>
+        <span class="sep">/</span>
+        <span>Type System</span>
+      </div>
+
+      <h1>Type System & Tagged Values</h1>
+      <p class="lead">
+        PyLua is a dynamically typed language where values have types, not variables. Under the hood, every PyLua value is represented as a high-performance 16-byte Tagged Value (<code>TValue</code>).
+      </p>
+
+      <section class="doc-section">
+        <h2>1. The Fundamental Types</h2>
+        <p>PyLua provides 8 basic Lua types along with native vector extensions:</p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th><code>type()</code> Return</th>
+                <th>Internal Tag</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>nil</code></td>
+                <td><code>"nil"</code></td>
+                <td><code>LUA_TNIL</code></td>
+                <td>Represents non-existence or the absence of a useful value. Unassigned variables and missing table keys default to <code>nil</code>.</td>
+              </tr>
+              <tr>
+                <td><code>boolean</code></td>
+                <td><code>"boolean"</code></td>
+                <td><code>LUA_TBOOLEAN</code></td>
+                <td>Holds either <code>true</code> or <code>false</code>. In conditionals, only <code>nil</code> and <code>false</code> are falsey; everything else (including <code>0</code> and <code>""</code>) is truthy.</td>
+              </tr>
+              <tr>
+                <td><code>number</code></td>
+                <td><code>"number"</code></td>
+                <td><code>LUA_TNUMBER</code></td>
+                <td>Subtyped into 64-bit integer (<code>LUA_VNUMINT</code>) and 64-bit double float (<code>LUA_VNUMFLT</code>). Supports automatic integer coercion.</td>
+              </tr>
+              <tr>
+                <td><code>string</code></td>
+                <td><code>"string"</code></td>
+                <td><code>LUA_TSTRING</code></td>
+                <td>Immutable byte array. Short strings (&le; 40 bytes) are globally interned for \(O(1)\) equality comparisons; long strings use lazy hashing.</td>
+              </tr>
+              <tr>
+                <td><code>table</code></td>
+                <td><code>"table"</code></td>
+                <td><code>LUA_TTABLE</code></td>
+                <td>The sole data-structuring mechanism. Dual-memory layout with contiguous 1-indexed array part and robin-hood/open-addressing hash table.</td>
+              </tr>
+              <tr>
+                <td><code>function</code></td>
+                <td><code>"function"</code></td>
+                <td><code>LUA_TFUNCTION</code></td>
+                <td>First-class callable closures. Subtyped into C closures (<code>CClosure</code>) and PyLua bytecode closures (<code>LClosure</code>).</td>
+              </tr>
+              <tr>
+                <td><code>userdata</code></td>
+                <td><code>"userdata"</code></td>
+                <td><code>LUA_TUSERDATA</code></td>
+                <td>Raw C/C++ memory blocks managed by PyLua's garbage collector. Used for OS window handles, physics bodies, textures, and vectors.</td>
+              </tr>
+              <tr>
+                <td><code>thread</code></td>
+                <td><code>"thread"</code></td>
+                <td><code>LUA_TTHREAD</code></td>
+                <td>First-class coroutine execution contexts with independent stacks. Managed cooperatively via <code>coroutine.resume()</code>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>2. Tagged Value Representation (`TValue`)</h2>
+        <p>
+          In <code>include/lobject.h</code>, every PyLua value is defined as a tagged union:
+        </p>
+
+        <div class="diagram-box">
+<pre>
+struct TValue {
+    Value value_;     /* 8 bytes: double, int64, GCObject*, or void* */
+    lu_byte tt_;      /* 1 byte:  Basic type tag (0..8) & variant flags */
+    /* 7 bytes padding on 64-bit architectures = 16 bytes total */
+};
+
+typedef union Value {
+    GCObject *gc;     /* Pointers to collected objects: String, Table, Closure, Userdata */
+    void *p;          /* Light userdata raw pointer */
+    lua_CFunction f;  /* Direct C function pointer */
+    lua_Integer i;    /* 64-bit signed integer */
+    lua_Number n;     /* 64-bit IEEE 754 floating point number */
+} Value;
+</pre>
+        </div>
+
+        <p>
+          Because values are packed into 16 bytes, register-to-register copies (via opcode <code>OP_MOVE</code>) compile down to a pair of 64-bit CPU load and store instructions, achieving native execution speeds without pointer indirection for numbers, booleans, and nil.
+        </p>
+      </section>
+
+      <section class="doc-section">
+        <h2>3. Numbers: Integer vs Float Duality</h2>
+        <p>
+          PyLua automatically distinguishes between integers and floating-point numbers:
+        </p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>number_duality.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>x = 100        <span class="token-comment">-- Integer subtype (LUA_VNUMINT)</span>
+y = 3.14       <span class="token-comment">-- Float subtype (LUA_VNUMFLT)</span>
+
+print(math.type(x))  <span class="token-comment">-- Output: "integer"</span>
+print(math.type(y))  <span class="token-comment">-- Output: "float"</span>
+
+<span class="token-comment">-- Division behavior:</span>
+print(7 / 2)   <span class="token-comment">-- 3.5  (Float division)</span>
+print(7 // 2)  <span class="token-comment">-- 3    (Floor division preserves integer type)</span></code></pre>
+        </div>
+
+        <div class="callout tip">
+          <div class="callout-title">Automatic Integer Conversion</div>
+          <p>
+            Bitwise operations (<code>&amp;</code>, <code>|</code>, <code>~</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code>) and table array indices strictly require integers. If a float has an exact integer representation (e.g. <code>4.0</code>), PyLua automatically converts it into an integer without precision loss.
+          </p>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>4. Tables: Dual-Memory Architecture</h2>
+        <p>
+          Tables in PyLua serve as arrays, hash maps, structs, sets, objects, and namespaces simultaneously. To achieve maximum performance and minimum cache misses, each table internally consists of:
+        </p>
+
+        <ol>
+          <li><strong>The Array Part:</strong> A contiguous C array storing keys from <code>1</code> to \(N\). Element access via <code>t[i]</code> performs direct pointer arithmetic without hashing.</li>
+          <li><strong>The Hash Part:</strong> An open-addressing hash table with collision node linking for arbitrary keys (strings, objects, negative numbers).</li>
+        </ol>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>table_examples.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-comment">-- Dual table: contiguous array + keyed dictionary</span>
+player = {
+  10, 20, 30,             <span class="token-comment">-- Stored in the fast array part (keys 1, 2, 3)</span>
+  name = "Aria",          <span class="token-comment">-- Stored in the hash part</span>
+  health = 100,
+  isAlive = true
+}
+
+print(player[1])          <span class="token-comment">-- Fast array access: 10</span>
+print(player.name)        <span class="token-comment">-- Hash lookup: "Aria"</span></code></pre>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>5. Metatables & Object-Oriented Programming</h2>
+        <p>
+          Every table and userdata can have an associated <strong>metatable</strong> containing metamethods that intercept operations like addition, indexing, stringification, and garbage collection:
+        </p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Metamethod</th>
+                <th>Triggered Operation</th>
+                <th>Behavior Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>__index</code></td>
+                <td><code>t[k]</code> or <code>t.k</code></td>
+                <td>Invoked when reading a key that does not exist in table <code>t</code>. Can be a fallback function or another table (prototype inheritance).</td>
+              </tr>
+              <tr>
+                <td><code>__newindex</code></td>
+                <td><code>t[k] = v</code></td>
+                <td>Invoked when assigning a value to a non-existent key.</td>
+              </tr>
+              <tr>
+                <td><code>__add</code>, <code>__sub</code>, etc.</td>
+                <td><code>a + b</code>, <code>a - b</code></td>
+                <td>Overloads mathematical and bitwise operators.</td>
+              </tr>
+              <tr>
+                <td><code>__tostring</code></td>
+                <td><code>tostring(t)</code></td>
+                <td>Custom string representation for logging and printing.</td>
+              </tr>
+              <tr>
+                <td><code>__call</code></td>
+                <td><code>t(...)</code></td>
+                <td>Allows invoking a table as if it were a function.</td>
+              </tr>
+              <tr>
+                <td><code>__gc</code></td>
+                <td>Garbage collection</td>
+                <td>Destructor finalizer called before the object memory is reclaimed.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>oop_class.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>Character = {}
+Character.__index = Character
+
+function Character.new(name, hp) {
+  instance = setmetatable({}, Character)
+  instance.name = name
+  instance.hp = hp
+  return instance
+}
+
+function Character:takeDamage(dmg) {
+  self.hp = self.hp - dmg
+  print(self.name .. " took " .. dmg .. " damage! HP: " .. self.hp)
+}
+
+hero = Character.new("Paladin", 150)
+hero:takeDamage(25)</code></pre>
+        </div>
+      </section>
+
+      <div class="page-nav">
+        <a href="index.html" class="page-nav-card prev">
+          <span class="page-nav-subtitle">&larr; Previous</span>
+          <span class="page-nav-title">1. Lexical Structure</span>
+        </a>
+        <a href="variables.html" class="page-nav-card next">
+          <span class="page-nav-subtitle">Next &rarr;</span>
+          <span class="page-nav-title">3. Variables & Scope</span>
+        </a>
+      </div>
+    </main>
+  </div>
+
+  <script src="../app.js"></script>
+</body>
+</html>

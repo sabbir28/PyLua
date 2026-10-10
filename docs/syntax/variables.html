@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variables & Scoping - PyLua Documentation</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Navbar -->
+  <header class="navbar">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="../index.html" class="nav-brand">
+        <span class="logo-badge">PyLua</span>
+        <span>Docs</span>
+      </a>
+    </div>
+
+    <div class="nav-search-container">
+      <input type="text" id="docSearch" placeholder="Search documentation, syntax, opcodes, APIs... (Press '/' to focus)" autocomplete="off">
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="https://github.com/sabbir28/PyLua" target="_blank" rel="noreferrer" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 600;">GitHub</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Language Syntax</div>
+        <a href="index.html" class="sidebar-link">1. Lexical Structure</a>
+        <a href="types.html" class="sidebar-link">2. Type System</a>
+        <a href="variables.html" class="sidebar-link active">3. Variables & Scope</a>
+        <a href="control-flow.html" class="sidebar-link">4. Control Flow</a>
+        <a href="operators.html" class="sidebar-link">5. Operators & Expressions</a>
+        <a href="functions.html" class="sidebar-link">6. Functions & Closures</a>
+        <a href="modules.html" class="sidebar-link">7. Modules & Imports</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Compiler & VM Runtime</div>
+        <a href="../runtime/index.html" class="sidebar-link">1. Compiler Pipeline</a>
+        <a href="../runtime/bytecode-vm.html" class="sidebar-link">2. Register-Based VM</a>
+        <a href="../runtime/opcodes.html" class="sidebar-link">3. Opcode Reference</a>
+        <a href="../runtime/gc-memory.html" class="sidebar-link">4. Garbage Collector</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Standard Libraries</div>
+        <a href="../standard-library/index.html" class="sidebar-link">Overview</a>
+        <a href="../standard-library/base.html" class="sidebar-link">Base Built-ins</a>
+        <a href="../standard-library/vector.html" class="sidebar-link">Vector Math (2D/3D)</a>
+        <a href="../standard-library/string-utf8.html" class="sidebar-link">String & UTF-8</a>
+        <a href="../standard-library/table.html" class="sidebar-link">Table Manipulation</a>
+        <a href="../standard-library/math.html" class="sidebar-link">Math & Numeric</a>
+        <a href="../standard-library/io-os.html" class="sidebar-link">I/O & Operating System</a>
+        <a href="../standard-library/request.html" class="sidebar-link">HTTP Networking</a>
+        <a href="../standard-library/gui.html" class="sidebar-link">Native GUI</a>
+        <a href="../standard-library/hash.html" class="sidebar-link">Cryptography & Hash</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">2D Game Engine (LEngine)</div>
+        <a href="../engine/index.html" class="sidebar-link">Engine Overview</a>
+        <a href="../engine/window.html" class="sidebar-link">Window Subsystem</a>
+        <a href="../engine/graphics.html" class="sidebar-link">Graphics & Rendering</a>
+        <a href="../engine/physics.html" class="sidebar-link">Physics Simulation</a>
+        <a href="../engine/audio.html" class="sidebar-link">Audio Subsystem</a>
+        <a href="../engine/input.html" class="sidebar-link">Input & Events</a>
+        <a href="../engine/ui.html" class="sidebar-link">In-Game UI</a>
+        <a href="../engine/animation.html" class="sidebar-link">Sprite Animation</a>
+        <a href="../engine/entity.html" class="sidebar-link">Entity-Script Model</a>
+        <a href="../engine/workers.html" class="sidebar-link">Multithreaded Workers</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div class="breadcrumbs">
+        <a href="../index.html">Docs</a>
+        <span class="sep">/</span>
+        <a href="index.html">Syntax</a>
+        <span class="sep">/</span>
+        <span>Variables & Scope</span>
+      </div>
+
+      <h1>Variables, Scoping & the Auto-Local Engine</h1>
+      <p class="lead">
+        Variables store state in PyLua. Unlike standard Lua where omitting <code>local</code> accidentally pollutes the global table, PyLua features a revolutionary <strong>Auto-Local</strong> compiler engine that guarantees variable safety by default.
+      </p>
+
+      <section class="doc-section">
+        <h2>1. The Problem with Standard Lua Variables</h2>
+        <p>
+          In traditional Lua 5.1–5.4, any assignment without the <code>local</code> keyword automatically assigns to the global environment table (<code>_ENV</code>):
+        </p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>lua_standard_issue.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-comment">-- Standard Lua (Dangerous!)</span>
+function calculate()
+    count = 10  <span class="token-comment">-- BUG: Accidental global variable! Pollutes _G["count"]</span>
+end</code></pre>
+        </div>
+
+        <p>
+          This has historically been the #1 source of concurrency race conditions, memory leaks, and hard-to-track mutation bugs in Lua codebases.
+        </p>
+      </section>
+
+      <section class="doc-section">
+        <h2>2. PyLua Auto-Local Scoping</h2>
+        <p>
+          In PyLua, variables declared inside any function, file, or block automatically default to <strong>local scope</strong>. You never need to pepper your code with redundant <code>local</code> keywords:
+        </p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>auto_local_demo.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>function computeArea(width, height) {
+    area = width * height    <span class="token-comment">-- Automatically a local variable!</span>
+    return area
+}
+
+computeArea(10, 20)
+print(area)  <span class="token-comment">-- Prints: nil (area did not leak into global scope!)</span></code></pre>
+        </div>
+
+        <h3>How the Compiler Backend Manages Auto-Local (`lparser_core.c`)</h3>
+        <p>
+          During the syntax parsing phase in <code>src/parser/impl/lparser_core.c</code>, when the parser encounters a variable assignment:
+        </p>
+
+        <div class="diagram-box">
+<pre>
+Variable Assignment Expression (e.g., `x = 50`)
+                     │
+                     ▼
+             searchvar() [lparser_core.c]
+                     │
+         ┌───────────┴───────────┐
+         ▼                       ▼
+   Variable found?         Variable not found in active scope?
+   (already in nactvar)          │
+         │                       ▼
+   Reuses register     PyLua Auto-Declaration Engine:
+                       ├── Calls registerlocalvar(ls, fs, varname)
+                       ├── Increments fs->nactvar
+                       ├── Assigns virtual register index (ridx)
+                       └── Emits OP_MOVE to target register!
+</pre>
+        </div>
+
+        <p>
+          This eliminates global table hashtable lookups (<code>OP_SETTABUP</code>) and replaces them with lightning-fast register operations (<code>OP_MOVE</code>), yielding a measurable speed boost in addition to total scoping safety.
+        </p>
+      </section>
+
+      <section class="doc-section">
+        <h2>3. Explicit Local Attributes: `&lt;const&gt;` &amp; `&lt;close&gt;`</h2>
+        <p>
+          While basic variables are auto-local, PyLua retains the explicit <code>local</code> keyword to support modern variable attributes:
+        </p>
+
+        <h3>Compile-Time Constant: `&lt;const&gt;`</h3>
+        <p>
+          Declares a variable that cannot be reassigned after its initial definition. Reassigning triggers a compile-time syntax error:
+        </p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>const_variable.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>local MAX_PLAYERS &lt;const&gt; = 64
+MAX_PLAYERS = 128  <span class="token-comment">-- Compile error: attempt to assign to const variable 'MAX_PLAYERS'</span></code></pre>
+        </div>
+
+        <h3>To-Be-Closed Resource (RAII): `&lt;close&gt;`</h3>
+        <p>
+          Declares a scope-bound resource. When execution leaves the enclosing block (whether normally, via <code>return</code>, <code>break</code>, or due to an error/exception), PyLua automatically invokes the variable's <code>__close</code> metamethod:
+        </p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>raii_close.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>function processFile(path) {
+    <span class="token-comment">-- The file handle is automatically closed when leaving this block!</span>
+    local f &lt;close&gt; = io.open(path, "r")
+    data = f:read("*a")
+    return #data
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>4. Upvalues &amp; Lexical Closures</h2>
+        <p>
+          When an inner function accesses a variable defined in an outer function, that variable becomes an <strong>upvalue</strong>:
+        </p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>upvalues_demo.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>function createCounter(start) {
+    count = start  <span class="token-comment">-- Local to createCounter</span>
+
+    return function() {
+        count = count + 1  <span class="token-comment">-- Captures 'count' as an upvalue</span>
+        return count
+    }
+}
+
+c1 = createCounter(0)
+print(c1())  <span class="token-comment">-- 1</span>
+print(c1())  <span class="token-comment">-- 2</span></code></pre>
+        </div>
+
+        <h3>Open vs Closed Upvalues in the VM</h3>
+        <p>
+          While <code>createCounter</code> is active on the call stack, the upvalue is <strong>open</strong>—pointing directly to the stack slot. When <code>createCounter</code> returns and its stack frame is popped, the VM's <code>luaF_close()</code> automatically copies the value into the closure's heap allocated upvalue structure, making it <strong>closed</strong>.
+        </p>
+      </section>
+
+      <section class="doc-section">
+        <h2>5. The Global Environment (`_ENV`)</h2>
+        <p>
+          In PyLua, global variables still exist when deliberately needed. All global variables are fields in the environment table stored in the predefined upvalue <code>_ENV</code>:
+        </p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>global_access.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-comment">-- Explicit global assignment via _G or _ENV:</span>
+_G.GlobalServerState = { running = true }
+
+print(_G.GlobalServerState.running)  <span class="token-comment">-- true</span>
+print(_ENV["GlobalServerState"].running) <span class="token-comment">-- true</span></code></pre>
+        </div>
+      </section>
+
+      <div class="page-nav">
+        <a href="types.html" class="page-nav-card prev">
+          <span class="page-nav-subtitle">&larr; Previous</span>
+          <span class="page-nav-title">2. Type System</span>
+        </a>
+        <a href="control-flow.html" class="page-nav-card next">
+          <span class="page-nav-subtitle">Next &rarr;</span>
+          <span class="page-nav-title">4. Control Flow</span>
+        </a>
+      </div>
+    </main>
+  </div>
+
+  <script src="../app.js"></script>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Opcode Reference - PyLua Documentation</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Navbar -->
+  <header class="navbar">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="../index.html" class="nav-brand">
+        <span class="logo-badge">PyLua</span>
+        <span>Docs</span>
+      </a>
+    </div>
+
+    <div class="nav-search-container">
+      <input type="text" id="docSearch" placeholder="Search documentation, syntax, opcodes, APIs... (Press '/' to focus)" autocomplete="off">
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="https://github.com/sabbir28/PyLua" target="_blank" rel="noreferrer" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 600;">GitHub</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Language Syntax</div>
+        <a href="../syntax/index.html" class="sidebar-link">1. Lexical Structure</a>
+        <a href="../syntax/types.html" class="sidebar-link">2. Type System</a>
+        <a href="../syntax/variables.html" class="sidebar-link">3. Variables & Scope</a>
+        <a href="../syntax/control-flow.html" class="sidebar-link">4. Control Flow</a>
+        <a href="../syntax/operators.html" class="sidebar-link">5. Operators & Expressions</a>
+        <a href="../syntax/functions.html" class="sidebar-link">6. Functions & Closures</a>
+        <a href="../syntax/modules.html" class="sidebar-link">7. Modules & Imports</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Compiler & VM Runtime</div>
+        <a href="index.html" class="sidebar-link">1. Compiler Pipeline</a>
+        <a href="bytecode-vm.html" class="sidebar-link">2. Register-Based VM</a>
+        <a href="opcodes.html" class="sidebar-link active">3. Opcode Reference</a>
+        <a href="gc-memory.html" class="sidebar-link">4. Garbage Collector</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Standard Libraries</div>
+        <a href="../standard-library/index.html" class="sidebar-link">Overview</a>
+        <a href="../standard-library/base.html" class="sidebar-link">Base Built-ins</a>
+        <a href="../standard-library/vector.html" class="sidebar-link">Vector Math (2D/3D)</a>
+        <a href="../standard-library/string-utf8.html" class="sidebar-link">String & UTF-8</a>
+        <a href="../standard-library/table.html" class="sidebar-link">Table Manipulation</a>
+        <a href="../standard-library/math.html" class="sidebar-link">Math & Numeric</a>
+        <a href="../standard-library/io-os.html" class="sidebar-link">I/O & Operating System</a>
+        <a href="../standard-library/request.html" class="sidebar-link">HTTP Networking</a>
+        <a href="../standard-library/gui.html" class="sidebar-link">Native GUI</a>
+        <a href="../standard-library/hash.html" class="sidebar-link">Cryptography & Hash</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">2D Game Engine (LEngine)</div>
+        <a href="../engine/index.html" class="sidebar-link">Engine Overview</a>
+        <a href="../engine/window.html" class="sidebar-link">Window Subsystem</a>
+        <a href="../engine/graphics.html" class="sidebar-link">Graphics & Rendering</a>
+        <a href="../engine/physics.html" class="sidebar-link">Physics Simulation</a>
+        <a href="../engine/audio.html" class="sidebar-link">Audio Subsystem</a>
+        <a href="../engine/input.html" class="sidebar-link">Input & Events</a>
+        <a href="../engine/ui.html" class="sidebar-link">In-Game UI</a>
+        <a href="../engine/animation.html" class="sidebar-link">Sprite Animation</a>
+        <a href="../engine/entity.html" class="sidebar-link">Entity-Script Model</a>
+        <a href="../engine/workers.html" class="sidebar-link">Multithreaded Workers</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div class="breadcrumbs">
+        <a href="../index.html">Docs</a>
+        <span class="sep">/</span>
+        <a href="index.html">Runtime</a>
+        <span class="sep">/</span>
+        <span>Opcode Reference</span>
+      </div>
+
+      <h1>Complete Bytecode Opcode Reference</h1>
+      <p class="lead">
+        An exhaustive guide to every 32-bit instruction opcode emitted by the PyLua code generator and executed by the virtual machine in <code>src/runtime/lvm.c</code>.
+      </p>
+
+      <section class="doc-section">
+        <h2>1. 32-Bit Instruction Formats</h2>
+        <p>Every instruction is exactly 32 bits wide, encoded into one of four basic formats:</p>
+
+        <div class="diagram-box">
+<pre>
+Format iABC:   [ B: 8 bits | k: 1 bit | C: 8 bits | A: 8 bits | Op: 7 bits ]
+Format iABx:   [ Bx: 17 bits unsigned            | A: 8 bits | Op: 7 bits ]
+Format iAsBx:  [ sBx: 17 bits signed             | A: 8 bits | Op: 7 bits ]
+Format isJ:    [ sJ: 25 bits signed jump offset              | Op: 7 bits ]
+</pre>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>2. Data Movement &amp; Constant Loading</h2>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Opcode</th>
+                <th>Format</th>
+                <th>Semantics</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge-opcode">OP_MOVE</span></td>
+                <td><code>iABC</code></td>
+                <td><code>R[A] := R[B]</code></td>
+                <td>Copies the value from virtual register <code>B</code> to register <code>A</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_LOADI</span></td>
+                <td><code>iAsBx</code></td>
+                <td><code>R[A] := sBx</code></td>
+                <td>Loads an immediate 17-bit signed integer directly into register <code>A</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_LOADF</span></td>
+                <td><code>iAsBx</code></td>
+                <td><code>R[A] := (lua_Number)sBx</code></td>
+                <td>Loads an immediate float directly into register <code>A</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_LOADK</span></td>
+                <td><code>iABx</code></td>
+                <td><code>R[A] := K[Bx]</code></td>
+                <td>Loads a constant from the prototype's constant table <code>K</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_LOADNIL</span></td>
+                <td><code>iABC</code></td>
+                <td><code>R[A]..R[A+B] := nil</code></td>
+                <td>Clears a range of \(B+1\) registers to <code>nil</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_LOADTRUE</span></td>
+                <td><code>iABC</code></td>
+                <td><code>R[A] := true</code></td>
+                <td>Assigns boolean <code>true</code> to register <code>A</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_LOADFALSE</span></td>
+                <td><code>iABC</code></td>
+                <td><code>R[A] := false</code></td>
+                <td>Assigns boolean <code>false</code> to register <code>A</code>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>3. Tables, Upvalues &amp; Environment</h2>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Opcode</th>
+                <th>Format</th>
+                <th>Semantics</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge-opcode">OP_GETTABUP</span></td>
+                <td><code>iABC</code></td>
+                <td><code>R[A] := UpValue[B][K[C]]</code></td>
+                <td>Loads a field from an upvalue table (commonly used for global variable access via <code>_ENV[var]</code>).</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_SETTABUP</span></td>
+                <td><code>iABC</code></td>
+                <td><code>UpValue[A][K[B]] := RK(C)</code></td>
+                <td>Sets a field in an upvalue table (e.g. <code>_ENV["score"] = 100</code>).</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_GETTABLE</span></td>
+                <td><code>iABC</code></td>
+                <td><code>R[A] := R[B][R[C]]</code></td>
+                <td>Dynamic table lookup: reads <code>t[key]</code> where both table and key are registers.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_SETTABLE</span></td>
+                <td><code>iABC</code></td>
+                <td><code>R[A][R[B]] := RK(C)</code></td>
+                <td>Dynamic table assignment: assigns <code>t[key] = val</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_GETFIELD</span></td>
+                <td><code>iABC</code></td>
+                <td><code>R[A] := R[B][K[C]]</code></td>
+                <td>Optimized string field lookup: reads <code>t.fieldName</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_SETFIELD</span></td>
+                <td><code>iABC</code></td>
+                <td><code>R[A][K[B]] := RK(C)</code></td>
+                <td>Optimized string field assignment: assigns <code>t.fieldName = val</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_NEWTABLE</span></td>
+                <td><code>iABC</code></td>
+                <td><code>R[A] := {}</code></td>
+                <td>Allocates a new table pre-sized with array and hash capacities.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>4. Arithmetic &amp; Bitwise Math</h2>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Opcode</th>
+                <th>Semantics</th>
+                <th>Opcode</th>
+                <th>Semantics</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge-opcode">OP_ADD</span></td>
+                <td><code>R[A] := R[B] + R[C]</code></td>
+                <td><span class="badge-opcode">OP_ADDI</span></td>
+                <td><code>R[A] := R[B] + sC</code> (Immediate integer)</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_SUB</span></td>
+                <td><code>R[A] := R[B] - R[C]</code></td>
+                <td><span class="badge-opcode">OP_MUL</span></td>
+                <td><code>R[A] := R[B] * R[C]</code></td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_DIV</span></td>
+                <td><code>R[A] := R[B] / R[C]</code></td>
+                <td><span class="badge-opcode">OP_IDIV</span></td>
+                <td><code>R[A] := R[B] // R[C]</code> (Floor div)</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_BAND</span></td>
+                <td><code>R[A] := R[B] &amp; R[C]</code></td>
+                <td><span class="badge-opcode">OP_BOR</span></td>
+                <td><code>R[A] := R[B] | R[C]</code></td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_BXOR</span></td>
+                <td><code>R[A] := R[B] ~ R[C]</code></td>
+                <td><span class="badge-opcode">OP_SHL</span></td>
+                <td><code>R[A] := R[B] &lt;&lt; R[C]</code></td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_SHR</span></td>
+                <td><code>R[A] := R[B] &gt;&gt; R[C]</code></td>
+                <td><span class="badge-opcode">OP_UNM</span></td>
+                <td><code>R[A] := -R[B]</code> (Unary negation)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>5. Branches, Calls &amp; Closures</h2>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Opcode</th>
+                <th>Format</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge-opcode">OP_JMP</span></td>
+                <td><code>isJ</code></td>
+                <td>Unconditional relative PC jump with 25-bit signed offset.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_EQ</span> / <span class="badge-opcode">OP_LT</span> / <span class="badge-opcode">OP_LE</span></td>
+                <td><code>iABC</code></td>
+                <td>Relational test: compares two registers, skips the next instruction if condition is false.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_CALL</span></td>
+                <td><code>iABC</code></td>
+                <td>Invokes function at <code>R[A]</code> passing \(B-1\) parameters, accepting \(C-1\) return values.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_TAILCALL</span></td>
+                <td><code>iABC</code></td>
+                <td>Executes tail call in-place by reusing the current call frame.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_RETURN</span></td>
+                <td><code>iABC</code></td>
+                <td>Returns values from the active function to caller.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_CLOSURE</span></td>
+                <td><code>iABx</code></td>
+                <td>Instantiates a runtime <code>LClosure</code> from prototype <code>P[Bx]</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-opcode">OP_FORLOOP</span></td>
+                <td><code>iABx</code></td>
+                <td>Increments numeric for-loop index and loops back if limit not reached.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="page-nav">
+        <a href="bytecode-vm.html" class="page-nav-card prev">
+          <span class="page-nav-subtitle">&larr; Previous</span>
+          <span class="page-nav-title">2. Register-Based VM</span>
+        </a>
+        <a href="gc-memory.html" class="page-nav-card next">
+          <span class="page-nav-subtitle">Next &rarr;</span>
+          <span class="page-nav-title">4. Garbage Collector</span>
+        </a>
+      </div>
+    </main>
+  </div>
+
+  <script src="../app.js"></script>
+</body>
+</html>

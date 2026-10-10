@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Syntax & Lexical Structure - PyLua Documentation</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Navbar -->
+  <header class="navbar">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="../index.html" class="nav-brand">
+        <span class="logo-badge">PyLua</span>
+        <span>Docs</span>
+      </a>
+    </div>
+
+    <div class="nav-search-container">
+      <input type="text" id="docSearch" placeholder="Search documentation, syntax, opcodes, APIs... (Press '/' to focus)" autocomplete="off">
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="https://github.com/sabbir28/PyLua" target="_blank" rel="noreferrer" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 600;">GitHub</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Language Syntax</div>
+        <a href="index.html" class="sidebar-link active">1. Lexical Structure</a>
+        <a href="types.html" class="sidebar-link">2. Type System</a>
+        <a href="variables.html" class="sidebar-link">3. Variables & Scope</a>
+        <a href="control-flow.html" class="sidebar-link">4. Control Flow</a>
+        <a href="operators.html" class="sidebar-link">5. Operators & Expressions</a>
+        <a href="functions.html" class="sidebar-link">6. Functions & Closures</a>
+        <a href="modules.html" class="sidebar-link">7. Modules & Imports</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Compiler & VM Runtime</div>
+        <a href="../runtime/index.html" class="sidebar-link">1. Compiler Pipeline</a>
+        <a href="../runtime/bytecode-vm.html" class="sidebar-link">2. Register-Based VM</a>
+        <a href="../runtime/opcodes.html" class="sidebar-link">3. Opcode Reference</a>
+        <a href="../runtime/gc-memory.html" class="sidebar-link">4. Garbage Collector</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Standard Libraries</div>
+        <a href="../standard-library/index.html" class="sidebar-link">Overview</a>
+        <a href="../standard-library/base.html" class="sidebar-link">Base Built-ins</a>
+        <a href="../standard-library/vector.html" class="sidebar-link">Vector Math (2D/3D)</a>
+        <a href="../standard-library/string-utf8.html" class="sidebar-link">String & UTF-8</a>
+        <a href="../standard-library/table.html" class="sidebar-link">Table Manipulation</a>
+        <a href="../standard-library/math.html" class="sidebar-link">Math & Numeric</a>
+        <a href="../standard-library/io-os.html" class="sidebar-link">I/O & Operating System</a>
+        <a href="../standard-library/request.html" class="sidebar-link">HTTP Networking</a>
+        <a href="../standard-library/gui.html" class="sidebar-link">Native GUI</a>
+        <a href="../standard-library/hash.html" class="sidebar-link">Cryptography & Hash</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">2D Game Engine (LEngine)</div>
+        <a href="../engine/index.html" class="sidebar-link">Engine Overview</a>
+        <a href="../engine/window.html" class="sidebar-link">Window Subsystem</a>
+        <a href="../engine/graphics.html" class="sidebar-link">Graphics & Rendering</a>
+        <a href="../engine/physics.html" class="sidebar-link">Physics Simulation</a>
+        <a href="../engine/audio.html" class="sidebar-link">Audio Subsystem</a>
+        <a href="../engine/input.html" class="sidebar-link">Input & Events</a>
+        <a href="../engine/ui.html" class="sidebar-link">In-Game UI</a>
+        <a href="../engine/animation.html" class="sidebar-link">Sprite Animation</a>
+        <a href="../engine/entity.html" class="sidebar-link">Entity-Script Model</a>
+        <a href="../engine/workers.html" class="sidebar-link">Multithreaded Workers</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div class="breadcrumbs">
+        <a href="../index.html">Docs</a>
+        <span class="sep">/</span>
+        <a href="index.html">Syntax</a>
+        <span class="sep">/</span>
+        <span>Lexical Structure</span>
+      </div>
+
+      <h1>Lexical Structure & Conventions</h1>
+      <p class="lead">
+        An exhaustive guide to PyLua's lexical grammar, character set, tokenization engine, comments, identifiers, reserved words, and how the underlying C99 lexer processes source text.
+      </p>
+
+      <section class="doc-section">
+        <h2>1. Character Encoding & Source Representation</h2>
+        <p>
+          PyLua source files must be encoded in <strong>UTF-8</strong>. The lexer operates directly on byte streams while honoring multi-byte UTF-8 sequences in strings and comments. Source files are parsed without requiring a byte order mark (BOM); if a UTF-8 BOM (<code>0xEF 0xBB 0xBF</code>) is present at the beginning of a source script, the lexer automatically skips it transparently.
+        </p>
+
+        <div class="callout tip">
+          <div class="callout-title">Unix Shebang Support</div>
+          <p>
+            If the first line of a PyLua source file begins with <code>#!</code> (such as <code>#!/usr/bin/env pylua</code>), the lexer automatically ignores the entire line, allowing PyLua scripts to be executed directly as executable scripts on Linux and POSIX environments.
+          </p>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>2. Identifiers & Naming Rules</h2>
+        <p>
+          Identifiers in PyLua denote variable names, function names, table keys, and labels. An identifier is any sequence of Latin letters (<code>A-Z</code>, <code>a-z</code>), digits (<code>0-9</code>), and underscores (<code>_</code>), provided it <strong>does not begin with a digit</strong> and is not a reserved keyword.
+        </p>
+        <ul>
+          <li><strong>Valid identifiers:</strong> <code>player_x</code>, <code>velocity2D</code>, <code>_internalState</code>, <code>Score_100</code>, <code>__init__</code></li>
+          <li><strong>Invalid identifiers:</strong> <code>2player</code> (starts with digit), <code>player-x</code> (minus operator), <code>if</code> (reserved keyword)</li>
+          <li><strong>Case Sensitivity:</strong> PyLua is strictly case-sensitive. <code>Counter</code>, <code>counter</code>, and <code>COUNTER</code> are three distinct identifiers.</li>
+        </ul>
+
+        <div class="callout warning">
+          <div class="callout-title">Reserved Pattern: Leading Underscore + Uppercase</div>
+          <p>
+            Identifiers starting with an underscore followed by uppercase letters (e.g., <code>_ENV</code>, <code>_G</code>, <code>_VERSION</code>) are reserved by convention for PyLua internal variables and global metamethod configurations. Avoid creating user variables with this pattern.
+          </p>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>3. Reserved Keywords</h2>
+        <p>
+          The following tokens are reserved keywords and cannot be used as variable or function identifiers:
+        </p>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Keywords</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Control Flow</strong></td>
+                <td><code>if</code>, <code>then</code>, <code>else</code>, <code>elseif</code>, <code>end</code>, <code>while</code>, <code>do</code>, <code>repeat</code>, <code>until</code>, <code>for</code>, <code>in</code>, <code>break</code>, <code>goto</code>, <code>return</code></td>
+              </tr>
+              <tr>
+                <td><strong>Definitions</strong></td>
+                <td><code>function</code>, <code>local</code></td>
+              </tr>
+              <tr>
+                <td><strong>Module System</strong></td>
+                <td><code>import</code> <span class="badge-opcode">PyLua Extension</span></td>
+              </tr>
+              <tr>
+                <td><strong>Logical Operators</strong></td>
+                <td><code>and</code>, <code>or</code>, <code>not</code></td>
+              </tr>
+              <tr>
+                <td><strong>Literals</strong></td>
+                <td><code>nil</code>, <code>true</code>, <code>false</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>4. Comments</h2>
+        <p>
+          PyLua supports single-line comments and multi-line block comments:
+        </p>
+
+        <h3>Single-Line Comments</h3>
+        <p>A single-line comment begins with two hyphens (<code>--</code>) and continues until the end of the line:</p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>single_line_comments.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-comment">-- Calculate acceleration vector</span>
+acceleration = force / mass  <span class="token-comment">-- Newton's Second Law</span></code></pre>
+        </div>
+
+        <h3>Multi-Line Block Comments</h3>
+        <p>
+          A block comment begins with <code>--[[</code> and extends across any number of lines until the matching <code>]]</code> delimiter:
+        </p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>block_comments.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-comment">--[[
+  =======================================================
+  PyLua Engine Subsystem Initializer
+  Handles hardware display queries and initializes GLFW.
+  =======================================================
+--]]</span>
+import engine
+print("Engine booting...")</code></pre>
+        </div>
+
+        <p>
+          Block comments can also contain nested brackets with equal signs (e.g. <code>--[=[ ... ]=]</code>) to allow embedding code that contains literal <code>]]</code> brackets without terminating the comment early.
+        </p>
+      </section>
+
+      <section class="doc-section">
+        <h2>5. Literals</h2>
+
+        <h3>Numerical Literals</h3>
+        <p>
+          PyLua differentiates between <strong>64-bit signed integers</strong> (<code>lua_Integer</code>) and <strong>64-bit IEEE 754 double-precision floats</strong> (<code>lua_Number</code>):
+        </p>
+        <ul>
+          <li><strong>Decimal Integers:</strong> <code>42</code>, <code>1000000</code>, <code>-15</code></li>
+          <li><strong>Hexadecimal Integers:</strong> <code>0x2A</code>, <code>0xFF00AA</code>, <code>0xDEADBEEF</code></li>
+          <li><strong>Decimal Floats:</strong> <code>3.14159</code>, <code>0.001</code>, <code>.75</code></li>
+          <li><strong>Scientific Notation:</strong> <code>1e6</code> (1,000,000.0), <code>2.5e-3</code> (0.0025)</li>
+          <li><strong>Hexadecimal Floats:</strong> <code>0x1.fp10</code> (1984.0)</li>
+        </ul>
+
+        <h3>String Literals</h3>
+        <p>
+          Strings in PyLua can be delimited by single quotes (<code>'...'</code>), double quotes (<code>"..."</code>), or long brackets (<code>[[...]]</code>):
+        </p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>string_literals.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>s1 = "Hello, PyLua!\n"       <span class="token-comment">-- Supports escape sequences like \n, \t, \x41, \u{1F600}</span>
+s2 = 'Single-quoted string'
+s3 = [[
+  Multi-line raw string.
+  Escape characters like \n are not evaluated here.
+]]</code></pre>
+        </div>
+      </section>
+
+      <section class="doc-section">
+        <h2>6. Backend Lexical Architecture (`llex.c`)</h2>
+        <p>
+          In the PyLua compiler backend, lexical scanning is implemented in <code>src/parser/llex.c</code>. The lexer uses a zero-allocation streaming model backed by <code>ZIO</code> (a buffered I/O stream):
+        </p>
+
+        <div class="diagram-box">
+<pre>
+Source Code Stream (ZIO buffer)
+             │
+             ▼
+      llex() [llex.c] ──────▶ Dispatches on current character:
+             │                   ├── Letter / '_'  ──▶ Reads Identifier / Keyword via TString hash
+             │                   ├── Digit / '.'   ──▶ Reads Number (luaO_str2num)
+             │                   ├── Quote ' or "  ──▶ Reads Escaped String Literal
+             │                   ├── '['           ──▶ Reads Long String or Bracket
+             │                   ├── '{' or '}'    ──▶ Emits TK_CBRACE / TK_OBRACE
+             │                   ├── '!'           ──▶ Checks next '=' ──▶ TK_NE (!=)
+             │                   └── '-'           ──▶ Checks next '-' ──▶ Skips comment
+             ▼
+     Token Descriptor [Token]
+     ├── token: TK_IMPORT / TK_NAME / TK_INT / TK_FLT / etc.
+     ├── seminfo: SemInfo union { lua_Number r; lua_Integer i; TString *ts; }
+     └── linenumber: int
+</pre>
+        </div>
+
+        <p>
+          Every keyword and identifier is automatically interned into the global string table (<code>global_State.strt</code>). This guarantees that subsequent comparisons during parsing are simple \(O(1)\) pointer equality checks rather than \(O(N)\) string comparisons.
+        </p>
+      </section>
+
+      <div class="page-nav">
+        <a href="../index.html" class="page-nav-card prev">
+          <span class="page-nav-subtitle">&larr; Previous</span>
+          <span class="page-nav-title">Documentation Home</span>
+        </a>
+        <a href="types.html" class="page-nav-card next">
+          <span class="page-nav-subtitle">Next &rarr;</span>
+          <span class="page-nav-title">2. Type System</span>
+        </a>
+      </div>
+    </main>
+  </div>
+
+  <script src="../app.js"></script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register-Based VM Architecture - PyLua Documentation</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Navbar -->
+  <header class="navbar">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="../index.html" class="nav-brand">
+        <span class="logo-badge">PyLua</span>
+        <span>Docs</span>
+      </a>
+    </div>
+
+    <div class="nav-search-container">
+      <input type="text" id="docSearch" placeholder="Search documentation, syntax, opcodes, APIs... (Press '/' to focus)" autocomplete="off">
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="https://github.com/sabbir28/PyLua" target="_blank" rel="noreferrer" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 600;">GitHub</a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Language Syntax</div>
+        <a href="../syntax/index.html" class="sidebar-link">1. Lexical Structure</a>
+        <a href="../syntax/types.html" class="sidebar-link">2. Type System</a>
+        <a href="../syntax/variables.html" class="sidebar-link">3. Variables & Scope</a>
+        <a href="../syntax/control-flow.html" class="sidebar-link">4. Control Flow</a>
+        <a href="../syntax/operators.html" class="sidebar-link">5. Operators & Expressions</a>
+        <a href="../syntax/functions.html" class="sidebar-link">6. Functions & Closures</a>
+        <a href="../syntax/modules.html" class="sidebar-link">7. Modules & Imports</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Compiler & VM Runtime</div>
+        <a href="index.html" class="sidebar-link">1. Compiler Pipeline</a>
+        <a href="bytecode-vm.html" class="sidebar-link active">2. Register-Based VM</a>
+        <a href="opcodes.html" class="sidebar-link">3. Opcode Reference</a>
+        <a href="gc-memory.html" class="sidebar-link">4. Garbage Collector</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">Standard Libraries</div>
+        <a href="../standard-library/index.html" class="sidebar-link">Overview</a>
+        <a href="../standard-library/base.html" class="sidebar-link">Base Built-ins</a>
+        <a href="../standard-library/vector.html" class="sidebar-link">Vector Math (2D/3D)</a>
+        <a href="../standard-library/string-utf8.html" class="sidebar-link">String & UTF-8</a>
+        <a href="../standard-library/table.html" class="sidebar-link">Table Manipulation</a>
+        <a href="../standard-library/math.html" class="sidebar-link">Math & Numeric</a>
+        <a href="../standard-library/io-os.html" class="sidebar-link">I/O & Operating System</a>
+        <a href="../standard-library/request.html" class="sidebar-link">HTTP Networking</a>
+        <a href="../standard-library/gui.html" class="sidebar-link">Native GUI</a>
+        <a href="../standard-library/hash.html" class="sidebar-link">Cryptography & Hash</a>
+      </div>
+
+      <div class="sidebar-category">
+        <div class="sidebar-category-title">2D Game Engine (LEngine)</div>
+        <a href="../engine/index.html" class="sidebar-link">Engine Overview</a>
+        <a href="../engine/window.html" class="sidebar-link">Window Subsystem</a>
+        <a href="../engine/graphics.html" class="sidebar-link">Graphics & Rendering</a>
+        <a href="../engine/physics.html" class="sidebar-link">Physics Simulation</a>
+        <a href="../engine/audio.html" class="sidebar-link">Audio Subsystem</a>
+        <a href="../engine/input.html" class="sidebar-link">Input & Events</a>
+        <a href="../engine/ui.html" class="sidebar-link">In-Game UI</a>
+        <a href="../engine/animation.html" class="sidebar-link">Sprite Animation</a>
+        <a href="../engine/entity.html" class="sidebar-link">Entity-Script Model</a>
+        <a href="../engine/workers.html" class="sidebar-link">Multithreaded Workers</a>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div class="breadcrumbs">
+        <a href="../index.html">Docs</a>
+        <span class="sep">/</span>
+        <a href="index.html">Runtime</a>
+        <span class="sep">/</span>
+        <span>Register-Based VM</span>
+      </div>
+
+      <h1>The Register-Based Virtual Machine</h1>
+      <p class="lead">
+        Learn why PyLua's register-based virtual machine is significantly faster than traditional stack-based VMs, and how the bytecode execution engine in <code>src/runtime/lvm.c</code> achieves maximum throughput.
+      </p>
+
+      <section class="doc-section">
+        <h2>1. Register-Based vs. Stack-Based Architecture</h2>
+        <p>
+          Most bytecode virtual machines (such as the Java Virtual Machine or Python's CPython) are <strong>stack-based</strong>. When computing an expression like <code>c = a + b</code>, a stack machine must execute four separate instructions:
+        </p>
+
+        <div class="diagram-box">
+<pre>
+Stack-Based VM (CPython / JVM):
+1. PUSH a       (pushes operand 'a' onto the stack)
+2. PUSH b       (pushes operand 'b' onto the stack)
+3. ADD          (pops both operands, adds them, pushes result)
+4. STORE c      (pops result from stack into variable 'c')
+Total: 4 VM dispatch cycles, 4 stack pointer adjustments!
+
+PyLua Register-Based VM:
+1. OP_ADD  R(c), R(a), R(b)
+Total: 1 VM dispatch cycle! Operands are addressed directly in registers.
+</pre>
+        </div>
+
+        <p>
+          By directly addressing local variables and temporary values as virtual registers inside the current stack frame, PyLua reduces instruction dispatch overhead by up to <strong>50%</strong>.
+        </p>
+      </section>
+
+      <section class="doc-section">
+        <h2>2. Sliding Register Window &amp; Call Stacks</h2>
+        <p>
+          In PyLua, virtual "registers" are not hardware CPU registers; they are slots inside the thread's execution stack (an array of <code>TValue</code>). Each active function invocation has a call frame (<code>CallInfo</code>):
+        </p>
+
+        <div class="diagram-box">
+<pre>
+Thread Stack (lua_State.stack)
+┌──────────────────────────────────────────────┐
+│  Caller Frame: R(0), R(1), R(2)...          │
+├──────────────────────────────────────────────┤
+│  Function Value (LClosure)                  │ ──▶ ci->func
+├──────────────────────────────────────────────┤
+│  Register Window for current function:       │
+│    R(0): Param 1                            │
+│    R(1): Param 2                            │
+│    R(2): Local variable 'x'                 │
+│    R(3): Temporary expression register      │
+│    R(4): Temporary expression register      │
+├──────────────────────────────────────────────┤
+│  Callee Frame (when calling nested func)...  │ ──▶ ci->next
+└──────────────────────────────────────────────┘
+</pre>
+        </div>
+
+        <p>
+          Register indexing is zero-based and relative to <code>ci->func + 1</code>. When a function executes <code>OP_MOVE 3, 1</code>, it simply copies <code>stack[base + 1]</code> to <code>stack[base + 3]</code>.
+        </p>
+      </section>
+
+      <section class="doc-section">
+        <h2>3. The Main Execution Loop (`luaV_execute`)</h2>
+        <p>
+          The core interpreter loop in <code>src/runtime/lvm.c</code> fetches, decodes, and executes 32-bit instructions. On modern compilers (GCC/Clang), it utilizes <strong>computed gotos</strong> (direct threading) to jump directly from the end of one opcode handler to the start of the next, avoiding branch prediction penalties from a giant switch statement.
+        </p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>vm_loop_concept.c</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-comment">/* Conceptual execution loop in lvm.c */</span>
+while (1) {
+    Instruction i = *(pc++);
+    OpCode op = GET_OPCODE(i);
+    switch (op) {
+        case OP_MOVE: {
+            setobjs2s(L, ra, RB(i));
+            break;
+        }
+        case OP_ADD: {
+            lua_Number nb, nc;
+            if (tonumberns(v2, nb) && tonumberns(v3, nc)) {
+                setfltvalue(s2v(ra), luai_numadd(L, nb, nc));
+            }
+            break;
+        }
+        case OP_CALL: {
+            /* Execute function call */
+            break;
+        }
+    }
+}</code></pre>
+        </div>
+      </section>
+
+      <div class="page-nav">
+        <a href="index.html" class="page-nav-card prev">
+          <span class="page-nav-subtitle">&larr; Previous</span>
+          <span class="page-nav-title">1. Compiler Pipeline</span>
+        </a>
+        <a href="opcodes.html" class="page-nav-card next">
+          <span class="page-nav-subtitle">Next &rarr;</span>
+          <span class="page-nav-title">3. Opcode Reference</span>
+        </a>
+      </div>
+    </main>
+  </div>
+
+  <script src="../app.js"></script>
+</body>
+</html>
