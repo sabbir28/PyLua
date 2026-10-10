@@ -212,8 +212,9 @@ typedef struct {
     DebugBreakpoint breakpoints[MAX_BREAKPOINTS];
     int bp_count;
 
-    /* Logs */
+    /* Logs (Circular Buffer) */
     LogEntry logs[MAX_LOG_LINES];
+    int log_start;
     int log_count;
     int log_scroll;
 
@@ -238,6 +239,11 @@ typedef struct {
     int mouse_left_pressed;
     int mouse_left_down;
 
+    /* Execution speed & UI refresh */
+    double last_ui_update;
+    int execution_delay_ms;
+    int restart_requested;
+
     /* Statistics */
     long long instructions_executed;
     double start_time;
@@ -248,11 +254,12 @@ static DebuggerState g_dbg = {
     NULL, 1280, 768, DBG_STATUS_PAUSED, TAB_CPU, 0,
     "", { {NULL}, 0, "" },
     {{0, 0, 0, 0}}, 0,
-    {{ "", 0.0, 0 }}, 0, 0,
+    {{ "", 0.0, 0 }}, 0, 0, 0,
     NULL, NULL, 0, 0, 0, 0,
     0,
     0, 0, 0,
     0.0, 0.0, 0, 0,
+    0.0, 0, 0,
     0, 0.0, "Ready"
 };
 
@@ -261,12 +268,15 @@ static DebuggerState g_dbg = {
 /* ========================================================================= */
 
 static void dbg_log_add(int level, const char *fmt, ...) {
-    if (g_dbg.log_count >= MAX_LOG_LINES) {
-        /* Shift older logs up */
-        memmove(&g_dbg.logs[0], &g_dbg.logs[1], sizeof(LogEntry) * (MAX_LOG_LINES - 1));
-        g_dbg.log_count = MAX_LOG_LINES - 1;
+    int idx;
+    if (g_dbg.log_count < MAX_LOG_LINES) {
+        idx = (g_dbg.log_start + g_dbg.log_count) % MAX_LOG_LINES;
+        g_dbg.log_count++;
+    } else {
+        idx = g_dbg.log_start;
+        g_dbg.log_start = (g_dbg.log_start + 1) % MAX_LOG_LINES;
     }
-    LogEntry *entry = &g_dbg.logs[g_dbg.log_count++];
+    LogEntry *entry = &g_dbg.logs[idx];
     entry->timestamp = glfwGetTime();
     entry->level = level;
     va_list args;
@@ -868,17 +878,18 @@ static void render_debugger_gui(lua_State *L) {
     dbg_draw_line(0, 62, (float)g_dbg.win_w, 62, 1.0f, 0.25f, 0.25f, 0.28f, 1.0f);
 
     float btn_x = 10.0f;
-    if (dbg_button(btn_x, 32, 85, 24, "RUN (F5)", 0.18f, 0.8f, 0.44f)) {
-        g_dbg.status = DBG_STATUS_RUNNING;
-        dbg_log_add(2, "[EXEC] Continued execution (F5)");
+    if (g_dbg.status == DBG_STATUS_RUNNING) {
+        if (dbg_button(btn_x, 32, 95, 24, "PAUSE (F5/P)", 0.95f, 0.61f, 0.07f)) {
+            g_dbg.status = DBG_STATUS_PAUSED;
+            dbg_log_add(2, "[EXEC] Paused by user");
+        }
+    } else {
+        if (dbg_button(btn_x, 32, 95, 24, "RUN (F5)", 0.18f, 0.8f, 0.44f)) {
+            g_dbg.status = DBG_STATUS_RUNNING;
+            dbg_log_add(2, "[EXEC] Continued execution (F5)");
+        }
     }
-    btn_x += 92.0f;
-
-    if (dbg_button(btn_x, 32, 90, 24, "PAUSE (P)", 0.95f, 0.61f, 0.07f)) {
-        g_dbg.status = DBG_STATUS_PAUSED;
-        dbg_log_add(2, "[EXEC] Paused by user");
-    }
-    btn_x += 97.0f;
+    btn_x += 102.0f;
 
     if (dbg_button(btn_x, 32, 95, 24, "STEP IN (F7)", 0.2f, 0.6f, 1.0f)) {
         g_dbg.status = DBG_STATUS_STEP_INTO;
@@ -898,6 +909,20 @@ static void render_debugger_gui(lua_State *L) {
         }
     }
     btn_x += 118.0f;
+
+    /* Speed / Slow-Motion button */
+    char speed_lbl[32];
+    if (g_dbg.execution_delay_ms == 0) strcpy(speed_lbl, "SPEED: MAX");
+    else snprintf(speed_lbl, sizeof(speed_lbl), "SPEED: %dms", g_dbg.execution_delay_ms);
+
+    if (dbg_button(btn_x, 32, 105, 24, speed_lbl, 0.6f, 0.35f, 0.85f)) {
+        if (g_dbg.execution_delay_ms == 0) g_dbg.execution_delay_ms = 10;
+        else if (g_dbg.execution_delay_ms == 10) g_dbg.execution_delay_ms = 50;
+        else if (g_dbg.execution_delay_ms == 50) g_dbg.execution_delay_ms = 100;
+        else g_dbg.execution_delay_ms = 0;
+        dbg_log_add(2, "[SPEED] Execution speed set to %d ms/inst (F6)", g_dbg.execution_delay_ms);
+    }
+    btn_x += 112.0f;
 
     /* Execution State Badge */
     float badge_x = (float)g_dbg.win_w - 230;
@@ -1178,7 +1203,7 @@ static void render_debugger_gui(lua_State *L) {
         for (int i = 0; i < visible_logs; i++) {
             int log_idx = g_dbg.log_scroll + i;
             if (log_idx >= g_dbg.log_count) break;
-            LogEntry *e = &g_dbg.logs[log_idx];
+            LogEntry *e = &g_dbg.logs[(g_dbg.log_start + log_idx) % MAX_LOG_LINES];
             float cur_ly = log_y + (float)i * 20.0f;
 
             if (i % 2 == 1) dbg_draw_rect(0, cur_ly, (float)g_dbg.win_w, 20, 0.13f, 0.13f, 0.15f, 1.0f);
@@ -1318,7 +1343,7 @@ static void render_debugger_gui(lua_State *L) {
     float btm_y = (float)g_dbg.win_h - bottom_bar_h;
     dbg_draw_rect(0, btm_y, (float)g_dbg.win_w, bottom_bar_h, 0.0f, 0.48f, 0.8f, 1.0f);
 
-    const char *help_text = "F5: Run | F7: Step Into | F8: Step Over | F2: Breakpoint | P: Pause | 1-5: Switch Tabs";
+    const char *help_text = "F5/Space: Run/Pause | F7/F11: Step In | F8/F10: Step Over | F2/F9: BP | F6: Speed | P: Pause";
     dbg_draw_text(12, btm_y + 6, help_text, 1.0f, 1.0f, 1.0f, 1.15f);
 
     char exec_stat[128];
@@ -1334,30 +1359,53 @@ static void render_debugger_gui(lua_State *L) {
 
 static void dbg_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
     (void)window; (void)scancode; (void)mods;
-    if (action != GLFW_PRESS) return;
+    if (action != GLFW_PRESS && action != GLFW_REPEAT) return;
+
+    /* For non-navigation keys, only act on PRESS (not repeat) */
+    if (action == GLFW_REPEAT && key != GLFW_KEY_UP && key != GLFW_KEY_DOWN &&
+        key != GLFW_KEY_PAGE_UP && key != GLFW_KEY_PAGE_DOWN) {
+        return;
+    }
 
     switch (key) {
         case GLFW_KEY_F5:
         case GLFW_KEY_SPACE:
-            g_dbg.status = DBG_STATUS_RUNNING;
-            dbg_log_add(2, "[EXEC] Continued execution");
+            if (g_dbg.status == DBG_STATUS_RUNNING) {
+                g_dbg.status = DBG_STATUS_PAUSED;
+                dbg_log_add(2, "[EXEC] Paused by user (F5/Space)");
+            } else {
+                g_dbg.status = DBG_STATUS_RUNNING;
+                dbg_log_add(2, "[EXEC] Continued execution (F5/Space)");
+            }
+            break;
+        case GLFW_KEY_P:
+        case GLFW_KEY_PAUSE:
+        case GLFW_KEY_F12:
+            g_dbg.status = DBG_STATUS_PAUSED;
+            dbg_log_add(2, "[EXEC] Execution paused (P/Pause)");
             break;
         case GLFW_KEY_F7:
+        case GLFW_KEY_F11:
             g_dbg.status = DBG_STATUS_STEP_INTO;
             break;
         case GLFW_KEY_F8:
+        case GLFW_KEY_F10:
             g_dbg.step_over_ci_depth = 0; /* will be populated in hook */
             g_dbg.status = DBG_STATUS_STEP_OVER;
             break;
         case GLFW_KEY_F2:
+        case GLFW_KEY_F9:
             if (g_dbg.selected_pc >= 0 && g_dbg.current_proto) {
                 int line = luaG_getfuncline(g_dbg.current_proto, g_dbg.selected_pc);
                 toggle_breakpoint(g_dbg.selected_pc, line);
             }
             break;
-        case GLFW_KEY_P:
-            g_dbg.status = DBG_STATUS_PAUSED;
-            dbg_log_add(2, "[EXEC] Execution paused (P)");
+        case GLFW_KEY_F6:
+            if (g_dbg.execution_delay_ms == 0) g_dbg.execution_delay_ms = 10;
+            else if (g_dbg.execution_delay_ms == 10) g_dbg.execution_delay_ms = 50;
+            else if (g_dbg.execution_delay_ms == 50) g_dbg.execution_delay_ms = 100;
+            else g_dbg.execution_delay_ms = 0;
+            dbg_log_add(2, "[SPEED] Execution speed set to %d ms/inst (F6)", g_dbg.execution_delay_ms);
             break;
         case GLFW_KEY_1: g_dbg.active_tab = TAB_CPU; break;
         case GLFW_KEY_2: g_dbg.active_tab = TAB_LOG; break;
@@ -1422,6 +1470,123 @@ static void dbg_window_size_callback(GLFWwindow *window, int width, int height) 
     g_dbg.win_h = height;
 }
 
+#ifdef _WIN32
+typedef struct {
+    int f5_down;
+    int space_down;
+    int pause_down;
+    int p_down;
+    int f12_down;
+    int f7_down;
+    int f11_down;
+    int f8_down;
+    int f10_down;
+    int f6_down;
+    int f2_down;
+    int f9_down;
+    int k1_down;
+    int k2_down;
+    int k3_down;
+    int k4_down;
+    int k5_down;
+    int up_down;
+    int down_down;
+    int pgup_down;
+    int pgdn_down;
+} HotkeyState;
+
+static HotkeyState g_hotkeys = {0};
+
+static int is_key_just_pressed(int vk, int *key_state) {
+    int down = (GetAsyncKeyState(vk) & 0x8000) != 0;
+    if (down && !(*key_state)) {
+        *key_state = 1;
+        return 1;
+    }
+    if (!down) {
+        *key_state = 0;
+    }
+    return 0;
+}
+
+static void poll_global_hotkeys(lua_State *L) {
+    /* If the GLFW debugger window is focused, GLFW's dbg_key_callback handles events.
+       Only poll global hotkeys when another window (such as the terminal console) is focused. */
+    if (g_dbg.window && glfwGetWindowAttrib(g_dbg.window, GLFW_FOCUSED)) {
+        return;
+    }
+
+    /* Speed toggle (F6) */
+    if (is_key_just_pressed(VK_F6, &g_hotkeys.f6_down)) {
+        if (g_dbg.execution_delay_ms == 0) g_dbg.execution_delay_ms = 10;
+        else if (g_dbg.execution_delay_ms == 10) g_dbg.execution_delay_ms = 50;
+        else if (g_dbg.execution_delay_ms == 50) g_dbg.execution_delay_ms = 100;
+        else g_dbg.execution_delay_ms = 0;
+        dbg_log_add(2, "[SPEED] Execution speed set to %d ms/inst (F6)", g_dbg.execution_delay_ms);
+    }
+
+    /* Breakpoint toggle (F2 / F9) */
+    if (is_key_just_pressed(VK_F2, &g_hotkeys.f2_down) ||
+        is_key_just_pressed(VK_F9, &g_hotkeys.f9_down)) {
+        if (g_dbg.selected_pc >= 0 && g_dbg.current_proto) {
+            int line = luaG_getfuncline(g_dbg.current_proto, g_dbg.selected_pc);
+            toggle_breakpoint(g_dbg.selected_pc, line);
+        }
+    }
+
+    if (g_dbg.status == DBG_STATUS_RUNNING) {
+        /* Play / Pause toggle while running (F5, Space, Pause, P, F12) */
+        if (is_key_just_pressed(VK_F5, &g_hotkeys.f5_down) ||
+            is_key_just_pressed(VK_SPACE, &g_hotkeys.space_down) ||
+            is_key_just_pressed(VK_PAUSE, &g_hotkeys.pause_down) ||
+            is_key_just_pressed('P', &g_hotkeys.p_down) ||
+            is_key_just_pressed(VK_F12, &g_hotkeys.f12_down)) {
+            g_dbg.status = DBG_STATUS_PAUSED;
+            dbg_log_add(2, "[EXEC] Paused execution (F5/Space/P)");
+        }
+    } else if (g_dbg.status == DBG_STATUS_PAUSED) {
+        /* Continue (F5, Space) */
+        if (is_key_just_pressed(VK_F5, &g_hotkeys.f5_down) ||
+            is_key_just_pressed(VK_SPACE, &g_hotkeys.space_down)) {
+            g_dbg.status = DBG_STATUS_RUNNING;
+            dbg_log_add(2, "[EXEC] Continued execution (F5/Space)");
+        }
+        /* Step Into (F7, F11) */
+        else if (is_key_just_pressed(VK_F7, &g_hotkeys.f7_down) ||
+                 is_key_just_pressed(VK_F11, &g_hotkeys.f11_down)) {
+            g_dbg.status = DBG_STATUS_STEP_INTO;
+        }
+        /* Step Over (F8, F10) */
+        else if (is_key_just_pressed(VK_F8, &g_hotkeys.f8_down) ||
+                 is_key_just_pressed(VK_F10, &g_hotkeys.f10_down)) {
+            g_dbg.step_over_ci_depth = get_call_depth(L);
+            g_dbg.status = DBG_STATUS_STEP_OVER;
+        }
+
+        /* Tabs */
+        if (is_key_just_pressed('1', &g_hotkeys.k1_down)) g_dbg.active_tab = TAB_CPU;
+        if (is_key_just_pressed('2', &g_hotkeys.k2_down)) g_dbg.active_tab = TAB_LOG;
+        if (is_key_just_pressed('3', &g_hotkeys.k3_down)) g_dbg.active_tab = TAB_BREAKPOINTS;
+        if (is_key_just_pressed('4', &g_hotkeys.k4_down)) g_dbg.active_tab = TAB_MEMORY;
+        if (is_key_just_pressed('5', &g_hotkeys.k5_down)) g_dbg.active_tab = TAB_SCRIPT;
+
+        /* Up / Down navigation */
+        if (is_key_just_pressed(VK_UP, &g_hotkeys.up_down)) {
+            if (g_dbg.selected_pc > 0) g_dbg.selected_pc--;
+        }
+        if (is_key_just_pressed(VK_DOWN, &g_hotkeys.down_down)) {
+            if (g_dbg.selected_pc < g_dbg.disasm_count - 1) g_dbg.selected_pc++;
+        }
+        if (is_key_just_pressed(VK_PRIOR, &g_hotkeys.pgup_down)) {
+            g_dbg.disasm_scroll_pc = (g_dbg.disasm_scroll_pc > 10) ? g_dbg.disasm_scroll_pc - 10 : 0;
+        }
+        if (is_key_just_pressed(VK_NEXT, &g_hotkeys.pgdn_down)) {
+            g_dbg.disasm_scroll_pc += 10;
+        }
+    }
+}
+#endif
+
 /* ========================================================================= */
 /* Debugger Hook                                                             */
 /* ========================================================================= */
@@ -1462,21 +1627,49 @@ static void debugger_hook(lua_State *L, lua_Debug *ar) {
         }
     }
 
-    /* While running, maintain 60 FPS polling every few instructions */
+    /* While running, maintain live UI refresh and check input */
     if (g_dbg.status == DBG_STATUS_RUNNING) {
         g_dbg.instructions_executed++;
-        if ((g_dbg.instructions_executed % 200) == 0) {
+
+        double now = glfwGetTime();
+        if (g_dbg.execution_delay_ms > 0 || (now - g_dbg.last_ui_update >= 0.016)) {
+            g_dbg.last_ui_update = now;
             glfwPollEvents();
-            if (glfwWindowShouldClose(g_dbg.window)) {
-                g_dbg.should_exit = 1;
-                luaL_error(L, "Debugger stopped by user.");
+#ifdef _WIN32
+            poll_global_hotkeys(L);
+#endif
+            render_debugger_gui(L);
+            glfwSwapBuffers(g_dbg.window);
+
+            if (g_dbg.execution_delay_ms > 0) {
+#ifdef _WIN32
+                Sleep((DWORD)g_dbg.execution_delay_ms);
+#endif
             }
+        } else if ((g_dbg.instructions_executed & 127) == 0) {
+            glfwPollEvents();
+#ifdef _WIN32
+            poll_global_hotkeys(L);
+#endif
         }
-        return;
+
+        if (glfwWindowShouldClose(g_dbg.window) || g_dbg.should_exit) {
+            g_dbg.should_exit = 1;
+            luaL_error(L, "Debugger stopped by user.");
+        }
+
+        /* If paused by button click or hotkey, enter modal loop below! */
+        if (g_dbg.status != DBG_STATUS_PAUSED) {
+            return;
+        }
     }
 
     /* Paused modal render loop */
     while (g_dbg.status == DBG_STATUS_PAUSED && !glfwWindowShouldClose(g_dbg.window)) {
+        glfwPollEvents();
+#ifdef _WIN32
+        poll_global_hotkeys(L);
+#endif
         render_debugger_gui(L);
         glfwSwapBuffers(g_dbg.window);
         glfwWaitEventsTimeout(0.016); /* ~60 FPS */
@@ -1526,9 +1719,12 @@ int engine_launch_debugger(lua_State *L, const char *script_path, int argc, char
     g_dbg.should_exit = 0;
     g_dbg.instructions_executed = 0;
     g_dbg.start_time = glfwGetTime();
+    g_dbg.last_ui_update = glfwGetTime();
     strncpy(g_dbg.script_path, script_path, sizeof(g_dbg.script_path) - 1);
 
     glfwMakeContextCurrent(window);
+    glfwShowWindow(window);
+    glfwFocusWindow(window);
     glfwSwapInterval(1);
 
     glfwSetKeyCallback(window, dbg_key_callback);

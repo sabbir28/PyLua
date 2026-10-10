@@ -114,7 +114,6 @@ static void forbody (LexState *ls, int base, int line, int nvars, int isgen) {
   int prep, endfor;
   checknext(ls, TK_DO);
   prep = luaK_codeABx(fs, forprep[isgen], base, 0);
-  fs->freereg--;
   enterblock(fs, &bl, 0);
   adjustlocalvars(ls, nvars);
   luaK_reserveregs(fs, nvars);
