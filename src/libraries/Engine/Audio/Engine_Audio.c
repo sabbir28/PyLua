@@ -144,10 +144,14 @@ static int audio_resume(lua_State *L) {
 }
 
 /*
-** engine.Audio.setVolume(volume)
+** ISSUE: If engine.Audio.setVolume or getVolume was called when audio_state was not initialized
+** (e.g. if ma_engine_init failed or device was unavailable), calling miniaudio engine API
+** caused undefined behavior or crashes.
+** FIX: Guard both audio_set_volume and audio_get_volume with an initialized check.
 */
 static int audio_set_volume(lua_State *L) {
     float vol = (float)luaL_checknumber(L, 1);
+    if (!audio_state.initialized) return 0;
     ma_engine_set_volume(&audio_state.engine, vol);
     return 0;
 }
@@ -156,6 +160,10 @@ static int audio_set_volume(lua_State *L) {
 ** engine.Audio.getVolume() -> number
 */
 static int audio_get_volume(lua_State *L) {
+    if (!audio_state.initialized) {
+        lua_pushnumber(L, 0.0);
+        return 1;
+    }
     lua_pushnumber(L, ma_engine_get_volume(&audio_state.engine));
     return 1;
 }

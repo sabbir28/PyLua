@@ -122,9 +122,11 @@ static int ui_progress_bar(lua_State *L) {
     float w = (float)luaL_checknumber(L, 5);
     float h = (float)luaL_checknumber(L, 6);
 
-    float pct = val / max;
-    if (pct < 0) pct = 0;
-    if (pct > 1) pct = 1;
+    /* ISSUE: Unchecked division val / max produced NaN or Inf when max was 0.0 or negative.
+       FIX: Added guard checking max > 0.0f and clamped percentage to [0.0, 1.0]. */
+    float pct = (max > 0.0f) ? (val / max) : 0.0f;
+    if (pct < 0.0f) pct = 0.0f;
+    if (pct > 1.0f) pct = 1.0f;
 
     lua_getglobal(L, "engine");
     lua_getfield(L, -1, "Graphics");

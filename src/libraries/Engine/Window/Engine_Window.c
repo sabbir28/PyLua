@@ -23,11 +23,14 @@
 
 #define ENGINE_WINDOW_MT "Engine.Window"
 
+/* ISSUE: Storing a raw const char *title from a temporary Lua string caused a dangling pointer
+   (use-after-free) if the Lua string was garbage collected before win_tostring was invoked.
+   FIX: Changed title to an internal buffer char title[128] and safely copied string contents. */
 typedef struct {
     GLFWwindow *handle;
     int width;
     int height;
-    const char *title;
+    char title[128];
     int is_open;
     int fullscreen;
     double fps_target;
@@ -119,7 +122,8 @@ static int win_create(lua_State *L) {
     win->handle = handle;
     win->width = w;
     win->height = h;
-    win->title = title;
+    strncpy(win->title, title, sizeof(win->title) - 1);
+    win->title[sizeof(win->title) - 1] = '\0';
     win->is_open = 1;
     win->fullscreen = fs;
     win->fps_target = 60.0;
@@ -207,7 +211,9 @@ static int win_set_size(lua_State *L) {
 */
 static int win_set_title(lua_State *L) {
     EngineWindow *win = check_window(L, 1);
-    win->title = luaL_checkstring(L, 2);
+    const char *new_title = luaL_checkstring(L, 2);
+    strncpy(win->title, new_title, sizeof(win->title) - 1);
+    win->title[sizeof(win->title) - 1] = '\0';
     if (win->handle) {
         glfwSetWindowTitle(win->handle, win->title);
     }
@@ -248,8 +254,12 @@ static int win_tostring(lua_State *L) {
 }
 
 /* Module-level functions */
+/* ISSUE: win_get_monitors was implemented but omitted from window_funcs table,
+   making engine.Window.getMonitors() unreachable from Lua.
+   FIX: Registered getMonitors in window_funcs. */
 static const luaL_Reg window_funcs[] = {
-    {"create", win_create},
+    {"create",      win_create},
+    {"getMonitors", win_get_monitors},
     {NULL, NULL}
 };
 

@@ -39,6 +39,7 @@ typedef struct PhysicsBody {
     BodyType type;
     Shape shape;
     struct PhysicsBody *next;
+    struct PhysicsWorld *world;
 } PhysicsBody;
 
 typedef struct {
@@ -48,7 +49,7 @@ typedef struct {
     Vec2 normal;
 } Manifold;
 
-typedef struct {
+typedef struct PhysicsWorld {
     Vec2 gravity;
     PhysicsBody *bodies;
 } PhysicsWorld;

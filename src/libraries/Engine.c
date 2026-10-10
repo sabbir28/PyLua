@@ -95,26 +95,34 @@ static int engine_create_worker(lua_State *L) {
     return 1;
 }
 
+/*
+** ISSUE: If a worker thread was still running, engine_cleanup_worker closed the thread
+** handle and immediately freed the Worker structure while worker_thread_func was still
+** executing, causing worker_thread_func to write to freed memory ('worker->running = 0') on exit.
+** FIX: Wait for the worker thread to finish executing before closing handles and freeing memory.
+*/
 static int engine_cleanup_worker(lua_State *L) {
     Worker *worker = (Worker *)lua_touserdata(L, 1);
     if (worker) {
-        if (worker->running) {
-            /* In a professional engine, we would signal the worker to stop gracefully. 
-               For now, we just ensure it's handled. */
-        }
 #ifdef _WIN32
-        CloseHandle(worker->thread);
+        if (worker->thread) {
+            WaitForSingleObject(worker->thread, INFINITE);
+            CloseHandle(worker->thread);
+            worker->thread = NULL;
+        }
 #else
-        pthread_detach(worker->thread);
+        if (worker->thread) {
+            pthread_join(worker->thread, NULL);
+        }
 #endif
         free(worker);
     }
     return 0;
 }
 
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
+/* ========================================================================= */
 /* Entity System                                                             */
-/* = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = */
+/* ========================================================================= */
 
 static Entity *check_entity(lua_State *L, int idx) {
     return (Entity *)luaL_checkudata(L, idx, ENGINE_ENTITY_MT);
@@ -132,37 +140,80 @@ static int entity_add_script(lua_State *L) {
     return 0;
 }
 
+/*
+** ISSUE: When an entity was destroyed or collected by Lua's Garbage Collector:
+** 1) 'ent->script_ref' in LUA_REGISTRYINDEX was never unreferenced on GC because
+**    no __gc metamethod existed, leaking Lua registry references.
+** 2) Pointers to collected or destroyed userdata remained in g_scene.entities, leading
+**    to dangling pointers and use-after-free crashes during the engine loop.
+** FIX: Implement entity_gc, unlink entities from g_scene, safely release script_ref,
+** and bind __gc in entity_methods.
+*/
+static void unlink_scene_entity(Entity *ent) {
+    for (int i = 0; i < g_scene.entity_count; i++) {
+        if (g_scene.entities[i] == ent) {
+            for (int j = i; j < g_scene.entity_count - 1; j++) {
+                g_scene.entities[j] = g_scene.entities[j + 1];
+            }
+            g_scene.entity_count--;
+            break;
+        }
+    }
+}
+
 static int entity_destroy(lua_State *L) {
     Entity *ent = check_entity(L, 1);
     ent->active = 0;
-    luaL_unref(L, LUA_REGISTRYINDEX, ent->script_ref);
-    ent->script_ref = LUA_NOREF;
+    if (ent->script_ref != LUA_NOREF && ent->script_ref != LUA_REFNIL) {
+        luaL_unref(L, LUA_REGISTRYINDEX, ent->script_ref);
+        ent->script_ref = LUA_NOREF;
+    }
+    unlink_scene_entity(ent);
     return 0;
 }
 
+static int entity_gc(lua_State *L) {
+    Entity *ent = (Entity *)luaL_checkudata(L, 1, ENGINE_ENTITY_MT);
+    if (ent) {
+        ent->active = 0;
+        if (ent->script_ref != LUA_NOREF && ent->script_ref != LUA_REFNIL) {
+            luaL_unref(L, LUA_REGISTRYINDEX, ent->script_ref);
+            ent->script_ref = LUA_NOREF;
+        }
+        unlink_scene_entity(ent);
+    }
+    return 0;
+}
+
+/*
+** ISSUE: In scene_create_entity, if entity_count reached MAX_ENTITIES, an attempt to reuse
+** an inactive entity slot executed 'return 1;' without pushing any userdata to the Lua stack,
+** causing a Lua C API stack underflow and yielding garbage/nil to Lua code. Also, entity name
+** strings could be unterminated.
+** FIX: First compact inactive entity slots in g_scene.entities. If still at MAX_ENTITIES,
+** report an error. Then create a fresh, zero-initialized userdata, safely copy and null-terminate
+** the name, initialize script_ref, bind the metatable, and return the newly created userdata.
+*/
 static int scene_create_entity(lua_State *L) {
     const char *name = luaL_optstring(L, 1, "Entity");
     if (g_scene.entity_count >= MAX_ENTITIES) {
-        /* Try to find an inactive slot first */
+        /* Compact inactive slots if at or near capacity */
+        int write_idx = 0;
         for (int i = 0; i < g_scene.entity_count; i++) {
-            if (!g_scene.entities[i]->active) {
-                Entity *ent = g_scene.entities[i];
-                strncpy(ent->name, name, 63);
-                ent->active = 1;
-                lua_newtable(L);
-                ent->script_ref = luaL_ref(L, LUA_REGISTRYINDEX);
-                
-                /* Return the existing userdata but update its metatable/state */
-                /* Actually, it's safer to just create a new one if possible or manage slots better. 
-                   For now, we'll just push the existing one. */
-                return 1; 
+            if (g_scene.entities[i] && g_scene.entities[i]->active) {
+                g_scene.entities[write_idx++] = g_scene.entities[i];
             }
         }
-        return luaL_error(L, "Too many active entities");
+        g_scene.entity_count = write_idx;
+        if (g_scene.entity_count >= MAX_ENTITIES) {
+            return luaL_error(L, "Maximum entity limit reached (%d)", MAX_ENTITIES);
+        }
     }
 
     Entity *ent = (Entity *)lua_newuserdatauv(L, sizeof(Entity), 0);
-    strncpy(ent->name, name, 63);
+    memset(ent, 0, sizeof(Entity));
+    strncpy(ent->name, name, sizeof(ent->name) - 1);
+    ent->name[sizeof(ent->name) - 1] = '\0';
     ent->active = 1;
     
     lua_newtable(L);
@@ -266,12 +317,24 @@ static int engine_run(lua_State *L) {
             lua_pop(L, 1);
         }
 
+        /*
+        ** ISSUE: In engine_run, if ent was NULL or script_ref was uninitialized/invalid,
+        ** lua_rawgeti pushed nil and lua_next panicked on non-table. Also, calling
+        ** 'engine.Input.update' blindly caused crashes if global 'engine' or 'Input'
+        ** was modified or missing.
+        ** FIX: Validate ent and script_ref, verify lua_istable before lua_next, and
+        ** safely check the type of engine, Input, and update before invoking lua_pcall.
+        */
         /* ENTITY UPDATES (The Ecosystem!) */
         for (int i = 0; i < g_scene.entity_count; i++) {
             Entity *ent = g_scene.entities[i];
-            if (!ent->active) continue;
+            if (!ent || !ent->active || ent->script_ref <= 0) continue;
             
             lua_rawgeti(L, LUA_REGISTRYINDEX, ent->script_ref);
+            if (!lua_istable(L, -1)) {
+                lua_pop(L, 1);
+                continue;
+            }
             lua_pushnil(L);
             while (lua_next(L, -2) != 0) {
                 /* 'key' at -2, 'script' at -1 */
@@ -299,10 +362,19 @@ static int engine_run(lua_State *L) {
 
         /* Latch Input State (for justPressed/Released) */
         lua_getglobal(L, "engine");
-        lua_getfield(L, -1, "Input");
-        lua_getfield(L, -1, "update");
-        lua_pcall(L, 0, 0, 0);
-        lua_pop(L, 2); /* pop engine, Input */
+        if (lua_istable(L, -1)) {
+            lua_getfield(L, -1, "Input");
+            if (lua_istable(L, -1)) {
+                lua_getfield(L, -1, "update");
+                if (lua_isfunction(L, -1)) {
+                    lua_pcall(L, 0, 0, 0);
+                } else {
+                    lua_pop(L, 1);
+                }
+            }
+            lua_pop(L, 1);
+        }
+        lua_pop(L, 1); /* pop engine */
 
         glfwSwapBuffers(current_win);
     }
@@ -324,6 +396,7 @@ static int engine_stop(lua_State *L) {
 static const luaL_Reg entity_methods[] = {
     {"addScript", entity_add_script},
     {"destroy",   entity_destroy},
+    {"__gc",      entity_gc},
     {NULL, NULL}
 };
 

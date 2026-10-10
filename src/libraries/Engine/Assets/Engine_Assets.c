@@ -30,7 +30,12 @@
 
 static int texture_gc(lua_State *L) {
     Texture *tex = (Texture *)luaL_checkudata(L, 1, ENGINE_TEXTURE_MT);
-    /* TODO: Delete OpenGL texture if initialized */
+    /* ISSUE: OpenGL texture handle was leaked in GPU VRAM upon Lua garbage collection.
+       FIX: Added glDeleteTextures to release GPU memory when the Texture userdata is collected. */
+    if (tex->id != 0) {
+        glDeleteTextures(1, &tex->id);
+        tex->id = 0;
+    }
     return 0;
 }
 

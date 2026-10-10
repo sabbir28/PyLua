@@ -58,11 +58,17 @@ void free_disasm_lines(void) {
     }
 }
 
+/*
+** ISSUE: If 'p' was NULL, accessing 'p->sizecode' directly caused a NULL pointer dereference crash.
+** Also checking 'op < (int)(sizeof(opnames) / sizeof(opnames[0]))' without checking 'op >= 0'
+** allowed negative op values to index opnames out of bounds.
+** FIX: Validate that 'p' is non-NULL before accessing p->sizecode, and check 'op >= 0'.
+*/
 void decode_proto(Proto *p) {
     free_disasm_lines();
     g_dbg.current_proto = p;
+    if (!p || p->sizecode <= 0) return;
     g_dbg.disasm_count = p->sizecode;
-    if (p->sizecode <= 0) return;
 
     g_dbg.disasm_lines = (DisasmLine *)calloc((size_t)p->sizecode, sizeof(DisasmLine));
     if (!g_dbg.disasm_lines) return;
@@ -85,7 +91,7 @@ void decode_proto(Proto *p) {
                  (unsigned char)((i >> 24) & 0xFF));
 
         /* Opcode Name */
-        if (op < (int)(sizeof(opnames) / sizeof(opnames[0]))) {
+        if (op >= 0 && op < (int)(sizeof(opnames) / sizeof(opnames[0]))) {
             snprintf(dl->opcode_name, sizeof(dl->opcode_name), "OP_%s", opnames[op]);
         } else {
             snprintf(dl->opcode_name, sizeof(dl->opcode_name), "OP_UNKNOWN_%d", op);
@@ -316,6 +322,47 @@ void decode_proto(Proto *p) {
             case OP_VARARG:
                 snprintf(dl->operands, sizeof(dl->operands), "R(%d), %d", a, GETARG_C(i));
                 break;
+            /*
+            ** ISSUE: Missing disassembly formatting for PyLua/Lua 5.4 metamethod opcodes
+            ** (OP_MMBIN, OP_MMBINI, OP_MMBINK) and PyLua extensions (OP_GETVARG, OP_ERRNNIL)
+            ** resulted in fallback to generic 'A:%d' without operand decoding.
+            ** FIX: Add cases for OP_MMBIN, OP_MMBINI, OP_MMBINK, OP_GETVARG, and OP_ERRNNIL.
+            */
+            case OP_MMBIN: {
+                int b = GETARG_B(i);
+                int c = GETARG_C(i);
+                snprintf(dl->operands, sizeof(dl->operands), "R(%d), R(%d), TM(%d)", a, b, c);
+                snprintf(dl->comment, sizeof(dl->comment), "; metamethod event %d", c);
+                break;
+            }
+            case OP_MMBINI: {
+                int sb = GETARG_sB(i);
+                int c = GETARG_C(i);
+                int k = GETARG_k(i);
+                snprintf(dl->operands, sizeof(dl->operands), "R(%d), %d, TM(%d), k=%d", a, sb, c, k);
+                snprintf(dl->comment, sizeof(dl->comment), "; metamethod event %d", c);
+                break;
+            }
+            case OP_MMBINK: {
+                int b = GETARG_B(i);
+                int c = GETARG_C(i);
+                int k = GETARG_k(i);
+                snprintf(dl->operands, sizeof(dl->operands), "R(%d), K(%d), TM(%d), k=%d", a, b, c, k);
+                snprintf(dl->comment, sizeof(dl->comment), "; metamethod event %d", c);
+                break;
+            }
+            case OP_GETVARG:
+                snprintf(dl->operands, sizeof(dl->operands), "R(%d), R(%d), R(%d)", a, GETARG_B(i), GETARG_C(i));
+                snprintf(dl->comment, sizeof(dl->comment), "; R(%d) = R(%d)[R(%d)] (vararg)", a, GETARG_B(i), GETARG_C(i));
+                break;
+            case OP_ERRNNIL: {
+                int bx = GETARG_Bx(i);
+                snprintf(dl->operands, sizeof(dl->operands), "R(%d), K(%d)", a, bx);
+                if (bx > 0 && (bx - 1) < p->sizek && ttisstring(&p->k[bx - 1])) {
+                    snprintf(dl->comment, sizeof(dl->comment), "; error if non-nil '%s'", getstr(tsvalue(&p->k[bx - 1])));
+                }
+                break;
+            }
             case OP_VARARGPREP:
                 snprintf(dl->operands, sizeof(dl->operands), "%d", a);
                 break;

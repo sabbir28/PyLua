@@ -25,6 +25,12 @@ static int spritesheet_new(lua_State *L) {
     int frameW = (int)luaL_checkinteger(L, 2);
     int frameH = (int)luaL_checkinteger(L, 3);
 
+    /* ISSUE: Missing positive bounds check on frameW/frameH allowed division-by-zero crashes (SIGFPE).
+       FIX: Added validation to ensure frame dimensions are strictly positive. */
+    if (frameW <= 0 || frameH <= 0) {
+        return luaL_error(L, "SpriteSheet frame width and height must be strictly positive (got %dx%d)", frameW, frameH);
+    }
+
     SpriteSheet *ss = (SpriteSheet *)lua_newuserdatauv(L, sizeof(SpriteSheet), 1);
     ss->texture = tex;
     ss->frameWidth = frameW;
@@ -225,44 +231,110 @@ static int animator_load_file(lua_State *L) {
     FILE *f = fopen(path, "rb");
     if (!f) return luaL_error(L, "Could not open animator file: %s", path);
 
+    /* ISSUE: Missing bounds validation on path_len, name_len, frame dimensions, and sequence/keyframe counts
+       allowed buffer overflows in tex_path[256] and anim->sequences[i].name[32], as well as division-by-zero crashes.
+       FIX: Added strict header verification, length limits, dimension checks, and allocation error handling. */
     char header[6];
-    fread(header, 1, 6, f);
-    if (header[5] < '\x04') { fclose(f); return luaL_error(L, "Animator requires v4+ .panim file"); }
+    if (fread(header, 1, 6, f) != 6 || memcmp(header, "PANIM", 5) != 0 || header[5] < '\x04') {
+        fclose(f);
+        return luaL_error(L, "Invalid or incompatible animator file format (requires PANIM v4+)");
+    }
 
-    int path_len; fread(&path_len, 4, 1, f);
-    char tex_path[256]; fread(tex_path, 1, path_len, f); tex_path[path_len] = '\0';
+    int path_len = 0;
+    if (fread(&path_len, 4, 1, f) != 1 || path_len <= 0 || path_len >= 256) {
+        fclose(f);
+        return luaL_error(L, "Malformed texture path length in animator file: %d", path_len);
+    }
+    char tex_path[256];
+    if ((int)fread(tex_path, 1, (size_t)path_len, f) != path_len) {
+        fclose(f);
+        return luaL_error(L, "Truncated texture path in animator file");
+    }
+    tex_path[path_len] = '\0';
 
-    lua_getglobal(L, "engine"); lua_getfield(L, -1, "Assets"); lua_getfield(L, -1, "loadTexture");
-    lua_pushstring(L, tex_path); lua_pcall(L, 1, 1, 0);
+    lua_getglobal(L, "engine");
+    lua_getfield(L, -1, "Assets");
+    lua_getfield(L, -1, "loadTexture");
+    lua_pushstring(L, tex_path);
+    if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
+        fclose(f);
+        return lua_error(L);
+    }
     Texture *tex = (Texture *)luaL_checkudata(L, -1, "Engine.Texture");
 
-    int frameW, frameH; fread(&frameW, 4, 1, f); fread(&frameH, 4, 1, f);
+    int frameW = 0, frameH = 0;
+    if (fread(&frameW, 4, 1, f) != 1 || fread(&frameH, 4, 1, f) != 1 || frameW <= 0 || frameH <= 0) {
+        fclose(f);
+        return luaL_error(L, "Invalid frame dimensions (%dx%d) in animator file", frameW, frameH);
+    }
 
     SpriteSheet *ss = (SpriteSheet *)lua_newuserdatauv(L, sizeof(SpriteSheet), 1);
-    ss->texture = tex; ss->frameWidth = frameW; ss->frameHeight = frameH;
-    ss->cols = tex->width / frameW; ss->rows = tex->height / frameH;
-    lua_pushvalue(L, -2); lua_setiuservalue(L, -2, 1);
-    luaL_getmetatable(L, ENGINE_SPRITESHEET_MT); lua_setmetatable(L, -2);
+    ss->texture = tex;
+    ss->frameWidth = frameW;
+    ss->frameHeight = frameH;
+    ss->cols = tex->width / frameW;
+    ss->rows = tex->height / frameH;
+    lua_pushvalue(L, -2);
+    lua_setiuservalue(L, -2, 1);
+    luaL_getmetatable(L, ENGINE_SPRITESHEET_MT);
+    lua_setmetatable(L, -2);
 
-    int seqCount; fread(&seqCount, 4, 1, f);
+    int seqCount = 0;
+    if (fread(&seqCount, 4, 1, f) != 1 || seqCount <= 0 || seqCount > 128) {
+        fclose(f);
+        return luaL_error(L, "Invalid sequence count (%d) in animator file", seqCount);
+    }
+
     Animator *anim = (Animator *)lua_newuserdatauv(L, sizeof(Animator), 1);
-    anim->sheet = ss; anim->sequenceCount = seqCount; anim->currentSequence = 0;
-    anim->sequences = (AnimationSequence *)malloc(sizeof(AnimationSequence) * seqCount);
+    anim->sheet = ss;
+    anim->sequenceCount = seqCount;
+    anim->currentSequence = 0;
+    anim->sequences = (AnimationSequence *)calloc((size_t)seqCount, sizeof(AnimationSequence));
+    if (!anim->sequences) {
+        fclose(f);
+        return luaL_error(L, "Out of memory allocating %d animation sequences", seqCount);
+    }
 
     for (int i = 0; i < seqCount; i++) {
-        int name_len; fread(&name_len, 4, 1, f);
-        fread(anim->sequences[i].name, 1, name_len, f);
+        int name_len = 0;
+        if (fread(&name_len, 4, 1, f) != 1 || name_len < 0 || name_len >= 32) {
+            fclose(f);
+            return luaL_error(L, "Invalid sequence name length (%d) in animator file", name_len);
+        }
+        if (name_len > 0 && (int)fread(anim->sequences[i].name, 1, (size_t)name_len, f) != name_len) {
+            fclose(f);
+            return luaL_error(L, "Truncated sequence name in animator file");
+        }
         anim->sequences[i].name[name_len] = '\0';
-        fread(&anim->sequences[i].keyframeCount, 4, 1, f);
-        anim->sequences[i].keyframes = (Keyframe *)malloc(sizeof(Keyframe) * anim->sequences[i].keyframeCount);
-        for (int k = 0; k < anim->sequences[i].keyframeCount; k++) {
-            fread(&anim->sequences[i].keyframes[k].frameIndex, 4, 1, f);
-            fread(&anim->sequences[i].keyframes[k].duration, 4, 1, f);
+
+        int kfCount = 0;
+        if (fread(&kfCount, 4, 1, f) != 1 || kfCount < 0 || kfCount > 1024) {
+            fclose(f);
+            return luaL_error(L, "Invalid keyframe count (%d) in animator sequence '%s'", kfCount, anim->sequences[i].name);
+        }
+        anim->sequences[i].keyframeCount = kfCount;
+        if (kfCount > 0) {
+            anim->sequences[i].keyframes = (Keyframe *)calloc((size_t)kfCount, sizeof(Keyframe));
+            if (!anim->sequences[i].keyframes) {
+                fclose(f);
+                return luaL_error(L, "Out of memory allocating %d keyframes", kfCount);
+            }
+            for (int k = 0; k < kfCount; k++) {
+                if (fread(&anim->sequences[i].keyframes[k].frameIndex, 4, 1, f) != 1 ||
+                    fread(&anim->sequences[i].keyframes[k].duration, 4, 1, f) != 1) {
+                    fclose(f);
+                    return luaL_error(L, "Truncated keyframe data in animator sequence '%s'", anim->sequences[i].name);
+                }
+            }
+        } else {
+            anim->sequences[i].keyframes = NULL;
         }
     }
     fclose(f);
-    lua_pushvalue(L, -2); lua_setiuservalue(L, -2, 1);
-    luaL_getmetatable(L, ENGINE_ANIMATOR_MT); lua_setmetatable(L, -2);
+    lua_pushvalue(L, -2);
+    lua_setiuservalue(L, -2, 1);
+    luaL_getmetatable(L, ENGINE_ANIMATOR_MT);
+    lua_setmetatable(L, -2);
     return 1;
 }
 

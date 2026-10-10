@@ -81,27 +81,68 @@ static void save_animator(const char *path) {
     printf("[Editor] Saved Animator v4 to %s\n", path);
 }
 
+/* ISSUE: Missing validation on path_len, name_len, sequence_count, and keyframe_count allowed
+   stack/heap buffer overflows and out-of-bounds array writes when loading malformed PANIM files.
+   FIX: Added strict length bounds, header verification, and array capacity clamping. */
 static void load_animator(const char *path) {
     FILE *f = fopen(path, "rb");
     if (!f) return;
-    char header[6]; fread(header, 1, 6, f);
-    if (header[5] < '\x04') { fclose(f); printf("[Editor] Binary format too old for animator\n"); return; }
-    int path_len; fread(&path_len, 4, 1, f);
-    fread(state.texture_path, 1, path_len, f); state.texture_path[path_len] = '\0';
+    char header[6];
+    if (fread(header, 1, 6, f) != 6) { fclose(f); return; }
+    if (memcmp(header, "PANIM", 5) != 0 || header[5] < '\x04') {
+        fclose(f);
+        printf("[Editor] Binary format invalid or too old for animator\n");
+        return;
+    }
+    int path_len = 0;
+    if (fread(&path_len, 4, 1, f) != 1 || path_len <= 0 || path_len >= (int)sizeof(state.texture_path)) {
+        fclose(f);
+        printf("[Editor] Invalid texture path length in animator file\n");
+        return;
+    }
+    if ((int)fread(state.texture_path, 1, (size_t)path_len, f) != path_len) {
+        fclose(f);
+        return;
+    }
+    state.texture_path[path_len] = '\0';
     load_texture_for_editor(state.texture_path);
-    fread(&state.frame_w, 4, 1, f); fread(&state.frame_h, 4, 1, f);
-    fread(&state.sequence_count, 4, 1, f);
+
+    if (fread(&state.frame_w, 4, 1, f) != 1 || fread(&state.frame_h, 4, 1, f) != 1) {
+        fclose(f);
+        return;
+    }
+    if (state.frame_w <= 0) state.frame_w = 64;
+    if (state.frame_h <= 0) state.frame_h = 64;
+
+    int seq_count = 0;
+    if (fread(&seq_count, 4, 1, f) != 1) { fclose(f); return; }
+    if (seq_count < 1) seq_count = 1;
+    if (seq_count > 16) seq_count = 16;
+    state.sequence_count = seq_count;
+
     for (int i = 0; i < state.sequence_count; i++) {
-        int name_len; fread(&name_len, 4, 1, f);
-        fread(state.sequences[i].name, 1, name_len, f); state.sequences[i].name[name_len] = '\0';
-        fread(&state.sequences[i].keyframe_count, 4, 1, f);
+        int name_len = 0;
+        if (fread(&name_len, 4, 1, f) != 1) break;
+        if (name_len < 0 || name_len >= (int)sizeof(state.sequences[i].name)) {
+            name_len = (int)sizeof(state.sequences[i].name) - 1;
+        }
+        if (name_len > 0 && (int)fread(state.sequences[i].name, 1, (size_t)name_len, f) != name_len) break;
+        state.sequences[i].name[name_len] = '\0';
+
+        int kf_count = 0;
+        if (fread(&kf_count, 4, 1, f) != 1) break;
+        if (kf_count < 1) kf_count = 1;
+        if (kf_count > 256) kf_count = 256;
+        state.sequences[i].keyframe_count = kf_count;
+
         for (int k = 0; k < state.sequences[i].keyframe_count; k++) {
-            fread(&state.sequences[i].keyframes[k].frameIndex, 4, 1, f);
-            fread(&state.sequences[i].keyframes[k].duration, 4, 1, f);
+            if (fread(&state.sequences[i].keyframes[k].frameIndex, 4, 1, f) != 1) break;
+            if (fread(&state.sequences[i].keyframes[k].duration, 4, 1, f) != 1) break;
         }
     }
     fclose(f);
-    state.current_sequence_idx = 0; state.selected_key_idx = 0;
+    state.current_sequence_idx = 0;
+    state.selected_key_idx = 0;
     printf("[Editor] Loaded Animator: %s\n", path);
 }
 
@@ -116,9 +157,12 @@ static void draw_editor_ui() {
     draw_rect(-1.0f, -1.0f, 0.2f, 2.0f, 0.15f, 0.15f, 0.17f); /* Sidebar */
     draw_rect(-0.8f, -1.0f, 1.8f, 0.3f, 0.08f, 0.08f, 0.1f);  /* Timeline */
 
+    if (state.current_sequence_idx < 0 || state.current_sequence_idx >= state.sequence_count) {
+        state.current_sequence_idx = 0;
+    }
     EditorSequence *cur_seq = &state.sequences[state.current_sequence_idx];
     float total_dur = 0;
-    for(int i=0; i<cur_seq->keyframe_count; i++) total_dur += cur_seq->keyframes[i].duration;
+    for (int i = 0; i < cur_seq->keyframe_count; i++) total_dur += cur_seq->keyframes[i].duration;
 
     float current_x = -0.75f;
     for (int i = 0; i < cur_seq->keyframe_count; i++) {
@@ -129,7 +173,7 @@ static void draw_editor_ui() {
         current_x += kw;
     }
 
-    if (state.texture_id != 0) {
+    if (state.texture_id != 0 && state.tex_w > 0 && state.tex_h > 0 && state.frame_w > 0 && state.frame_h > 0) {
         glEnable(GL_TEXTURE_2D); glBindTexture(GL_TEXTURE_2D, state.texture_id); glColor4f(1, 1, 1, 1);
         glBegin(GL_QUADS); /* Sheet View */
         glTexCoord2f(0, 0); glVertex2f(-0.75f, 0.9f); glTexCoord2f(1, 0); glVertex2f(0.05f, 0.9f);
@@ -137,17 +181,20 @@ static void draw_editor_ui() {
         glEnd();
 
         float t = fmodf(state.playback_time, total_dur + 0.001f);
-        int cur_frame = cur_seq->keyframes[0].frameIndex;
+        int cur_frame = (cur_seq->keyframe_count > 0) ? cur_seq->keyframes[0].frameIndex : 0;
         float sum = 0;
-        for(int i=0; i<cur_seq->keyframe_count; i++) {
+        for (int i = 0; i < cur_seq->keyframe_count; i++) {
             if (t < sum + cur_seq->keyframes[i].duration) { cur_frame = cur_seq->keyframes[i].frameIndex; break; }
             sum += cur_seq->keyframes[i].duration;
         }
+        /* ISSUE: Unchecked division state.tex_w / state.frame_w caused SIGFPE if frame_w was zero.
+           FIX: Verified frame_w and frame_h are strictly positive before division. */
         int cols = state.tex_w / state.frame_w;
-        float u1 = (float)((cur_frame % cols) * state.frame_w) / state.tex_w;
-        float v1 = (float)((cur_frame / cols) * state.frame_h) / state.tex_h;
-        float u2 = u1 + (float)state.frame_w / state.tex_w;
-        float v2 = v1 + (float)state.frame_h / state.tex_h;
+        if (cols <= 0) cols = 1;
+        float u1 = (float)((cur_frame % cols) * state.frame_w) / (float)state.tex_w;
+        float v1 = (float)((cur_frame / cols) * state.frame_h) / (float)state.tex_h;
+        float u2 = u1 + (float)state.frame_w / (float)state.tex_w;
+        float v2 = v1 + (float)state.frame_h / (float)state.tex_h;
         glBegin(GL_QUADS); /* Preview */
         glTexCoord2f(u1, v1); glVertex2f(0.3f, 0.8f); glTexCoord2f(u2, v1); glVertex2f(0.8f, 0.8f);
         glTexCoord2f(u2, v2); glVertex2f(0.8f, -0.1f); glTexCoord2f(u1, v2); glVertex2f(0.3f, -0.1f);
@@ -197,7 +244,12 @@ int engine_launch_editor(lua_State *L, const char *mode) {
     (void)L; if (strcmp(mode, "animation") != 0) return 0;
     if (!glfwInit()) return 0;
     GLFWwindow* window = glfwCreateWindow(1280, 720, "PyLua Animator Editor PRO", NULL, NULL);
-    if (!window) return 0;
+    /* ISSUE: Leaked GLFW resources if window creation failed.
+       FIX: Added glfwTerminate() call before returning on failure. */
+    if (!window) {
+        glfwTerminate();
+        return 0;
+    }
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, key_callback);
     printf("[Editor] Multi-Animation Mode Active\n");

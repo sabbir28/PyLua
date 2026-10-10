@@ -109,9 +109,14 @@ static void resolve_collision(Manifold *m) {
 
     if (vel_along_normal > 0) return;
 
+    /* ISSUE: Division by zero occurred if total inverse mass was 0.0 or negative.
+       FIX: Guard against total_inv_mass <= 0.0f before impulse calculation and positional correction. */
+    float total_inv_mass = m->a->inv_mass + m->b->inv_mass;
+    if (total_inv_mass <= 0.0f) return;
+
     float e = fminf(m->a->restitution, m->b->restitution);
     float j = -(1 + e) * vel_along_normal;
-    j /= m->a->inv_mass + m->b->inv_mass;
+    j /= total_inv_mass;
 
     Vec2 impulse = vec2_mul(m->normal, j);
     m->a->velocity = vec2_sub(m->a->velocity, vec2_mul(impulse, m->a->inv_mass));
@@ -120,7 +125,7 @@ static void resolve_collision(Manifold *m) {
     /* Positional correction to prevent sinking */
     const float percent = 0.2f;
     const float slop = 0.01f;
-    Vec2 correction = vec2_mul(m->normal, (fmaxf(m->penetration - slop, 0.0f) / (m->a->inv_mass + m->b->inv_mass)) * percent);
+    Vec2 correction = vec2_mul(m->normal, (fmaxf(m->penetration - slop, 0.0f) / total_inv_mass) * percent);
     m->a->position = vec2_sub(m->a->position, vec2_mul(correction, m->a->inv_mass));
     m->b->position = vec2_add(m->b->position, vec2_mul(correction, m->b->inv_mass));
 }
@@ -206,6 +211,7 @@ static int phys_world_add_body(lua_State *L) {
     body->shape.type = SHAPE_CIRCLE; /* Default */
     body->shape.data.radius = 0.5f;
 
+    body->world = world;
     body->next = world->bodies;
     world->bodies = body;
 
@@ -243,13 +249,34 @@ static int phys_body_set_vel(lua_State *L) {
     return 0;
 }
 
+/* ISSUE: Physics bodies garbage collected by Lua remained in world->bodies linked list,
+   causing dangling pointer and use-after-free crashes during future physics steps.
+   FIX: Implemented phys_body_gc to cleanly unlink the body from its parent world. */
+static int phys_body_gc(lua_State *L) {
+    PhysicsBody *body = check_body(L, 1);
+    if (body->world) {
+        PhysicsBody **curr = &body->world->bodies;
+        while (*curr) {
+            if (*curr == body) {
+                *curr = body->next;
+                break;
+            }
+            curr = &(*curr)->next;
+        }
+        body->world = NULL;
+        body->next = NULL;
+    }
+    return 0;
+}
+
 /* ========================================================================= */
 /* Registration                                                              */
 /* ========================================================================= */
 
 static const luaL_Reg world_methods[] = {
-    {"step", phys_world_step},
-    {"addBody", phys_world_add_body},
+    {"step",       phys_world_step},
+    {"addBody",    phys_world_add_body},
+    {"createBody", phys_world_add_body},
     {NULL, NULL}
 };
 
@@ -258,6 +285,7 @@ static const luaL_Reg body_methods[] = {
     {"setVelocity", phys_body_set_vel},
     {"setCircle",   phys_body_set_circle},
     {"setRect",     phys_body_set_rect},
+    {"__gc",        phys_body_gc},
     {NULL, NULL}
 };
 
