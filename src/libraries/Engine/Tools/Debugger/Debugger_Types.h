@@ -129,6 +129,16 @@ typedef struct {
     int mouse_left_pressed;
     int mouse_left_down;
 
+    /* Scrollbar drag interaction */
+    int disasm_sb_dragging;
+    float disasm_sb_drag_offset_y;
+    int reg_sb_dragging;
+    float reg_sb_drag_offset_y;
+    int log_sb_dragging;
+    float log_sb_drag_offset_y;
+    int src_sb_dragging;
+    float src_sb_drag_offset_y;
+
     /* Execution speed & UI refresh */
     double last_ui_update;
     int execution_delay_ms;
@@ -167,3 +177,4 @@ typedef struct {
 #endif
 
 #endif /* DEBUGGER_TYPES_H */
+

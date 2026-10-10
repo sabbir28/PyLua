@@ -40,3 +40,4 @@ int get_call_depth(lua_State *L);
 #endif
 
 #endif /* DEBUGGER_CORE_H */
+

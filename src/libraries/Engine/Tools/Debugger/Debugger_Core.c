@@ -7,18 +7,7 @@
 #include <stdarg.h>
 
 /* Global Debugger State Instance */
-DebuggerState g_dbg = {
-    NULL, 1280, 768, DBG_STATUS_PAUSED, TAB_CPU, 0,
-    "", { {NULL}, 0, "" },
-    {{0, 0, 0, 0}}, 0,
-    {{ "", 0.0, 0 }}, 0, 0, 0,
-    NULL, NULL, 0, 0, 0, 0,
-    0,
-    0, 0, 0,
-    0.0, 0.0, 0, 0,
-    0.0, 0, 0,
-    0, 0.0, "Ready"
-};
+DebuggerState g_dbg = { 0 };
 
 void dbg_state_init(GLFWwindow *window, const char *script_path) {
     g_dbg.window = window;
@@ -45,6 +34,14 @@ void dbg_state_init(GLFWwindow *window, const char *script_path) {
     g_dbg.selected_pc = 0;
     g_dbg.disasm_scroll_pc = 0;
     g_dbg.step_over_ci_depth = 0;
+    g_dbg.disasm_sb_dragging = 0;
+    g_dbg.disasm_sb_drag_offset_y = 0.0f;
+    g_dbg.reg_sb_dragging = 0;
+    g_dbg.reg_sb_drag_offset_y = 0.0f;
+    g_dbg.log_sb_dragging = 0;
+    g_dbg.log_sb_drag_offset_y = 0.0f;
+    g_dbg.src_sb_dragging = 0;
+    g_dbg.src_sb_drag_offset_y = 0.0f;
     if (script_path) {
         strncpy(g_dbg.script_path, script_path, sizeof(g_dbg.script_path) - 1);
         g_dbg.script_path[sizeof(g_dbg.script_path) - 1] = '\0';
@@ -199,3 +196,4 @@ int get_call_depth(lua_State *L) {
     }
     return depth;
 }
+

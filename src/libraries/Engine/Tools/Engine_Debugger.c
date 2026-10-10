@@ -37,8 +37,20 @@ static void debugger_hook(lua_State *L, lua_Debug *ar) {
     if (p != g_dbg.current_proto) {
         decode_proto(p);
     }
-    g_dbg.current_pc = cur_pc;
-    g_dbg.selected_pc = cur_pc;
+    if (cur_pc != g_dbg.current_pc) {
+        g_dbg.current_pc = cur_pc;
+        g_dbg.selected_pc = cur_pc;
+
+        /* Auto-scroll to keep executing instruction visible */
+        int max_vis = (int)(((float)g_dbg.win_h - 84.0f - 24.0f - 22.0f) / 22.0f);
+        if (max_vis < 5) max_vis = 5;
+        if (g_dbg.current_pc < g_dbg.disasm_scroll_pc) {
+            g_dbg.disasm_scroll_pc = g_dbg.current_pc;
+        } else if (g_dbg.current_pc >= g_dbg.disasm_scroll_pc + max_vis) {
+            g_dbg.disasm_scroll_pc = g_dbg.current_pc - max_vis + 4;
+            if (g_dbg.disasm_scroll_pc < 0) g_dbg.disasm_scroll_pc = 0;
+        }
+    }
 
     /* Check if breakpoint hit */
     int bp_idx = find_breakpoint(cur_pc);
@@ -213,3 +225,4 @@ int engine_launch_debugger(lua_State *L, const char *script_path, int argc, char
     glfwTerminate();
     return (run_status == LUA_OK) ? 1 : 0;
 }
+

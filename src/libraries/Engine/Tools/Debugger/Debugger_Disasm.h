@@ -24,3 +24,4 @@ void free_disasm_lines(void);
 #endif
 
 #endif /* DEBUGGER_DISASM_H */
+

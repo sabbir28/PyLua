@@ -31,3 +31,4 @@ int dbg_button(float x, float y, float w, float h, const char *text, float accen
 #endif
 
 #endif /* DEBUGGER_RENDER_H */
+

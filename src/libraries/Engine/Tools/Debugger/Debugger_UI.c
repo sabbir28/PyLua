@@ -166,8 +166,9 @@ void render_debugger_gui(lua_State *L) {
     if (g_dbg.active_tab == TAB_CPU) {
         /* SPLIT VIEW: Disassembly (Left) + Registers/State (Right) */
         float split_x = (float)g_dbg.win_w - 440.0f;
+        float sb_w = 14.0f;
+        float disasm_table_w = split_x - sb_w;
 
-        /* --- LEFT: DISASSEMBLY TABLE --- */
         /* Table Column Headers (Y: 84 to 106) */
         dbg_draw_rect(0, main_y, split_x, 22, 0.16f, 0.16f, 0.19f, 1.0f);
         dbg_draw_line(0, main_y + 22, split_x, main_y + 22, 1.0f, 0.25f, 0.25f, 0.28f, 1.0f);
@@ -184,14 +185,12 @@ void render_debugger_gui(lua_State *L) {
         float row_y_start = main_y + 22;
         float row_h = 22.0f;
         int max_visible_rows = (int)((main_h - 22) / row_h);
+        int max_scroll = g_dbg.disasm_count - max_visible_rows;
+        if (max_scroll < 0) max_scroll = 0;
 
-        /* Keep current_pc visible */
-        if (g_dbg.current_pc < g_dbg.disasm_scroll_pc) {
-            g_dbg.disasm_scroll_pc = g_dbg.current_pc;
-        } else if (g_dbg.current_pc >= g_dbg.disasm_scroll_pc + max_visible_rows) {
-            g_dbg.disasm_scroll_pc = g_dbg.current_pc - max_visible_rows + 4;
-            if (g_dbg.disasm_scroll_pc < 0) g_dbg.disasm_scroll_pc = 0;
-        }
+        /* Clamp disasm_scroll_pc within valid bounds */
+        if (g_dbg.disasm_scroll_pc > max_scroll) g_dbg.disasm_scroll_pc = max_scroll;
+        if (g_dbg.disasm_scroll_pc < 0) g_dbg.disasm_scroll_pc = 0;
 
         for (int r = 0; r < max_visible_rows; r++) {
             int pc_idx = g_dbg.disasm_scroll_pc + r;
@@ -203,19 +202,19 @@ void render_debugger_gui(lua_State *L) {
             int is_sel = (pc_idx == g_dbg.selected_pc);
             int bp_idx = find_breakpoint(pc_idx);
 
-            /* Zebra striping */
+            /* Zebra striping up to the scrollbar edge */
             if (is_cur) {
-                dbg_draw_rect(0, cur_row_y, split_x, row_h, 0.12f, 0.28f, 0.45f, 1.0f);
-                dbg_draw_rect_outline(0, cur_row_y, split_x, row_h, 1.0f, 0.0f, 0.65f, 1.0f, 1.0f);
+                dbg_draw_rect(0, cur_row_y, disasm_table_w, row_h, 0.12f, 0.28f, 0.45f, 1.0f);
+                dbg_draw_rect_outline(0, cur_row_y, disasm_table_w, row_h, 1.0f, 0.0f, 0.65f, 1.0f, 1.0f);
             } else if (is_sel) {
-                dbg_draw_rect(0, cur_row_y, split_x, row_h, 0.22f, 0.24f, 0.28f, 1.0f);
-                dbg_draw_rect_outline(0, cur_row_y, split_x, row_h, 1.0f, 0.4f, 0.5f, 0.6f, 1.0f);
+                dbg_draw_rect(0, cur_row_y, disasm_table_w, row_h, 0.22f, 0.24f, 0.28f, 1.0f);
+                dbg_draw_rect_outline(0, cur_row_y, disasm_table_w, row_h, 1.0f, 0.4f, 0.5f, 0.6f, 1.0f);
             } else if (r % 2 == 1) {
-                dbg_draw_rect(0, cur_row_y, split_x, row_h, 0.13f, 0.13f, 0.15f, 1.0f);
+                dbg_draw_rect(0, cur_row_y, disasm_table_w, row_h, 0.13f, 0.13f, 0.15f, 1.0f);
             }
 
             /* Click handling for row selection and breakpoint toggle */
-            if (g_dbg.mouse_left_pressed && g_dbg.mouse_y >= cur_row_y && g_dbg.mouse_y < cur_row_y + row_h && g_dbg.mouse_x < split_x) {
+            if (g_dbg.mouse_left_pressed && g_dbg.mouse_y >= cur_row_y && g_dbg.mouse_y < cur_row_y + row_h && g_dbg.mouse_x < disasm_table_w) {
                 g_dbg.selected_pc = pc_idx;
                 if (g_dbg.mouse_x < 30.0f) {
                     toggle_breakpoint(pc_idx, line->line);
@@ -293,6 +292,91 @@ void render_debugger_gui(lua_State *L) {
                     dbg_draw_line(branch_x, src_y, branch_x, max_y, line_w, arr_r, arr_g, arr_b, 1.0f);
                     dbg_draw_triangle(branch_x - 4.0f, max_y - 8.0f, branch_x + 4.0f, max_y - 8.0f, branch_x, max_y, arr_r, arr_g, arr_b, 1.0f);
                 }
+            }
+        }
+
+        /* ================================================================= */
+        /* DISASSEMBLY VERTICAL SCROLLBAR                                     */
+        /* ================================================================= */
+        float sb_x = disasm_table_w;
+        float sb_y = row_y_start;
+        float sb_h = main_h - 22.0f;
+
+        /* Track background */
+        dbg_draw_rect(sb_x, sb_y, sb_w, sb_h, 0.12f, 0.12f, 0.14f, 1.0f);
+        dbg_draw_line(sb_x, sb_y, sb_x, sb_y + sb_h, 1.0f, 0.22f, 0.22f, 0.26f, 1.0f);
+
+        if (g_dbg.disasm_count > 0 && max_scroll > 0) {
+            float ratio = (float)max_visible_rows / (float)g_dbg.disasm_count;
+            float thumb_h = sb_h * ratio;
+            if (thumb_h < 26.0f) thumb_h = 26.0f;
+            if (thumb_h > sb_h - 4.0f) thumb_h = sb_h - 4.0f;
+            float avail_h = sb_h - thumb_h;
+
+            /* Mouse dragging interaction */
+            if (g_dbg.disasm_sb_dragging) {
+                if (g_dbg.mouse_left_down) {
+                    float new_thumb_y = (float)g_dbg.mouse_y - g_dbg.disasm_sb_drag_offset_y;
+                    float s_ratio = (new_thumb_y - sb_y) / avail_h;
+                    if (s_ratio < 0.0f) s_ratio = 0.0f;
+                    if (s_ratio > 1.0f) s_ratio = 1.0f;
+                    g_dbg.disasm_scroll_pc = (int)(s_ratio * (float)max_scroll + 0.5f);
+                } else {
+                    g_dbg.disasm_sb_dragging = 0;
+                }
+            }
+
+            /* Re-clamp disasm_scroll_pc */
+            if (g_dbg.disasm_scroll_pc > max_scroll) g_dbg.disasm_scroll_pc = max_scroll;
+            if (g_dbg.disasm_scroll_pc < 0) g_dbg.disasm_scroll_pc = 0;
+
+            float scroll_ratio = (float)g_dbg.disasm_scroll_pc / (float)max_scroll;
+            if (scroll_ratio < 0.0f) scroll_ratio = 0.0f;
+            if (scroll_ratio > 1.0f) scroll_ratio = 1.0f;
+            float thumb_y = sb_y + avail_h * scroll_ratio;
+
+            /* Mouse click interaction on track or thumb */
+            int mouse_in_sb = (g_dbg.mouse_x >= sb_x && g_dbg.mouse_x <= split_x &&
+                               g_dbg.mouse_y >= sb_y && g_dbg.mouse_y <= sb_y + sb_h);
+            if (mouse_in_sb && g_dbg.mouse_left_pressed) {
+                if (g_dbg.mouse_y >= thumb_y && g_dbg.mouse_y <= thumb_y + thumb_h) {
+                    g_dbg.disasm_sb_dragging = 1;
+                    g_dbg.disasm_sb_drag_offset_y = (float)g_dbg.mouse_y - thumb_y;
+                } else if (g_dbg.mouse_y < thumb_y) {
+                    g_dbg.disasm_scroll_pc -= max_visible_rows;
+                    if (g_dbg.disasm_scroll_pc < 0) g_dbg.disasm_scroll_pc = 0;
+                } else {
+                    g_dbg.disasm_scroll_pc += max_visible_rows;
+                    if (g_dbg.disasm_scroll_pc > max_scroll) g_dbg.disasm_scroll_pc = max_scroll;
+                }
+            }
+
+            int hover_thumb = (g_dbg.mouse_x >= sb_x && g_dbg.mouse_x <= split_x &&
+                               g_dbg.mouse_y >= thumb_y && g_dbg.mouse_y <= thumb_y + thumb_h);
+            float tr, tg, tb;
+            if (g_dbg.disasm_sb_dragging) {
+                /* Active Dragging: bright cyan */
+                tr = 0.0f; tg = 0.65f; tb = 1.0f;
+            } else if (hover_thumb) {
+                /* Hover: bright slate */
+                tr = 0.45f; tg = 0.48f; tb = 0.55f;
+            } else {
+                /* Normal: clean neutral slate */
+                tr = 0.28f; tg = 0.29f; tb = 0.34f;
+            }
+
+            /* Draw thumb pill */
+            dbg_draw_rect(sb_x + 2.0f, thumb_y + 1.0f, sb_w - 4.0f, thumb_h - 2.0f, tr, tg, tb, 1.0f);
+            dbg_draw_rect_outline(sb_x + 2.0f, thumb_y + 1.0f, sb_w - 4.0f, thumb_h - 2.0f, 1.0f,
+                                  tr * 1.2f, tg * 1.2f, tb * 1.2f, 1.0f);
+
+            /* Decorative tactile grip lines in thumb center */
+            if (thumb_h >= 32.0f) {
+                float mid_y = thumb_y + thumb_h * 0.5f;
+                float g_alpha = g_dbg.disasm_sb_dragging ? 0.95f : (hover_thumb ? 0.8f : 0.45f);
+                dbg_draw_line(sb_x + 4.0f, mid_y - 3.0f, split_x - 4.0f, mid_y - 3.0f, 1.0f, 0.9f, 0.95f, 1.0f, g_alpha);
+                dbg_draw_line(sb_x + 4.0f, mid_y,        split_x - 4.0f, mid_y,        1.0f, 0.9f, 0.95f, 1.0f, g_alpha);
+                dbg_draw_line(sb_x + 4.0f, mid_y + 3.0f, split_x - 4.0f, mid_y + 3.0f, 1.0f, 0.9f, 0.95f, 1.0f, g_alpha);
             }
         }
 
@@ -551,3 +635,4 @@ void render_debugger_gui(lua_State *L) {
 
     g_dbg.mouse_left_pressed = 0;
 }
+

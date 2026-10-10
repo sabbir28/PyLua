@@ -27,3 +27,4 @@ void poll_global_hotkeys(lua_State *L);
 #endif
 
 #endif /* DEBUGGER_INPUT_H */
+

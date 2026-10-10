@@ -20,3 +20,4 @@ void render_debugger_gui(lua_State *L);
 #endif
 
 #endif /* DEBUGGER_UI_H */
+

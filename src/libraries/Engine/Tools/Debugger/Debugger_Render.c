@@ -211,3 +211,4 @@ int dbg_button(float x, float y, float w, float h, const char *text, float accen
 
     return hover && g_dbg.mouse_left_pressed;
 }
+

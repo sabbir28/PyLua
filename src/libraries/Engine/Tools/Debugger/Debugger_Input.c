@@ -66,10 +66,20 @@ void dbg_key_callback(GLFWwindow *window, int key, int scancode, int action, int
         case GLFW_KEY_4: g_dbg.active_tab = TAB_MEMORY; break;
         case GLFW_KEY_5: g_dbg.active_tab = TAB_SCRIPT; break;
         case GLFW_KEY_UP:
-            if (g_dbg.selected_pc > 0) g_dbg.selected_pc--;
+            if (g_dbg.selected_pc > 0) {
+                g_dbg.selected_pc--;
+                if (g_dbg.selected_pc < g_dbg.disasm_scroll_pc)
+                    g_dbg.disasm_scroll_pc = g_dbg.selected_pc;
+            }
             break;
         case GLFW_KEY_DOWN:
-            if (g_dbg.selected_pc < g_dbg.disasm_count - 1) g_dbg.selected_pc++;
+            if (g_dbg.selected_pc < g_dbg.disasm_count - 1) {
+                g_dbg.selected_pc++;
+                int max_vis = (int)(((float)g_dbg.win_h - 84.0f - 24.0f - 22.0f) / 22.0f);
+                if (max_vis < 5) max_vis = 5;
+                if (g_dbg.selected_pc >= g_dbg.disasm_scroll_pc + max_vis)
+                    g_dbg.disasm_scroll_pc = g_dbg.selected_pc - max_vis + 1;
+            }
             break;
         case GLFW_KEY_PAGE_UP:
             g_dbg.disasm_scroll_pc = (g_dbg.disasm_scroll_pc > 10) ? g_dbg.disasm_scroll_pc - 10 : 0;
@@ -88,6 +98,10 @@ void dbg_mouse_button_callback(GLFWwindow *window, int button, int action, int m
             g_dbg.mouse_left_pressed = 1;
         } else if (action == GLFW_RELEASE) {
             g_dbg.mouse_left_down = 0;
+            g_dbg.disasm_sb_dragging = 0;
+            g_dbg.reg_sb_dragging = 0;
+            g_dbg.log_sb_dragging = 0;
+            g_dbg.src_sb_dragging = 0;
         }
     }
 }
@@ -205,10 +219,20 @@ void poll_global_hotkeys(lua_State *L) {
 
         /* Up / Down navigation */
         if (is_key_just_pressed(VK_UP, &g_hotkeys.up_down)) {
-            if (g_dbg.selected_pc > 0) g_dbg.selected_pc--;
+            if (g_dbg.selected_pc > 0) {
+                g_dbg.selected_pc--;
+                if (g_dbg.selected_pc < g_dbg.disasm_scroll_pc)
+                    g_dbg.disasm_scroll_pc = g_dbg.selected_pc;
+            }
         }
         if (is_key_just_pressed(VK_DOWN, &g_hotkeys.down_down)) {
-            if (g_dbg.selected_pc < g_dbg.disasm_count - 1) g_dbg.selected_pc++;
+            if (g_dbg.selected_pc < g_dbg.disasm_count - 1) {
+                g_dbg.selected_pc++;
+                int max_vis = (int)(((float)g_dbg.win_h - 84.0f - 24.0f - 22.0f) / 22.0f);
+                if (max_vis < 5) max_vis = 5;
+                if (g_dbg.selected_pc >= g_dbg.disasm_scroll_pc + max_vis)
+                    g_dbg.disasm_scroll_pc = g_dbg.selected_pc - max_vis + 1;
+            }
         }
         if (is_key_just_pressed(VK_PRIOR, &g_hotkeys.pgup_down)) {
             g_dbg.disasm_scroll_pc = (g_dbg.disasm_scroll_pc > 10) ? g_dbg.disasm_scroll_pc - 10 : 0;
@@ -223,3 +247,4 @@ void poll_global_hotkeys(lua_State *L) {
     (void)L;
 }
 #endif
+
