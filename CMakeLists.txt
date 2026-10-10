@@ -83,6 +83,7 @@ if(NOT ANDROID)
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Assets/Engine_Assets.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Animation/Engine_Animation.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Tools/Engine_Editor.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Tools/Engine_Debugger.c
     )
 else()
     list(APPEND PYLUA_SOURCES

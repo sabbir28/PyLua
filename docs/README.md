@@ -80,3 +80,4 @@ docs/
     ├── entity.html              # Entity-Script Component Model & Lifecycle Dispatch
     └── workers.html             # Multithreaded Background Workers & Concurrency
 ```
+

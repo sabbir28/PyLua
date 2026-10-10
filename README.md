@@ -256,6 +256,24 @@ print("MD5: " .. hashVal)
 
 ---
 
+## 🔍 Live Visual CPU & Bytecode Debugger
+
+PyLua features a built-in interactive **x64dbg / OllyDbg-style visual CPU & bytecode debugger**:
+
+```bash
+pylua --debug my_script.lua
+```
+
+* **Interactive Disassembly**: View 32-bit bytecode instructions with hex addresses (`0000`), raw hex machine bytes (`43 00 80 00`), decoded opcodes, operands, and evaluated comments.
+* **Visual Branch Arrows**: Colored directional branch lines connecting jump instructions (`OP_JMP`, `OP_FORLOOP`) directly to target destination offsets.
+* **Execution Pointer**: Real-time `▶ PC` pointer highlighting the currently paused or executing instruction.
+* **Virtual Registers Panel**: Live inspection of registers `R[0] .. R[N]` with dynamic type tags (`integer`, `float`, `string`, `table`, etc.).
+* **Constants Pool & Upvalues**: Immediate visibility into string/numeric constant tables (`K0 .. KM`) and function closure upvalues.
+* **Breakpoints**: Click the breakpoint column or press <kbd>F2</kbd> to set/clear instruction breakpoints.
+* **Keyboard Hotkeys**: <kbd>F5</kbd> (Run), <kbd>F7</kbd> (Step Into single bytecode), <kbd>F8</kbd> (Step Over), <kbd>F2</kbd> (Toggle Breakpoint), <kbd>P</kbd> (Pause), <kbd>1-5</kbd> (Switch Tabs).
+
+---
+
 ## 📖 Documentation Website
 
 Comprehensive API documentation, interactive examples, and guides are available in the [`docs/`](docs/) directory:

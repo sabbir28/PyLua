@@ -103,6 +103,7 @@ static void print_usage (const char *badoption) {
   "  -v        show version information\n"
   "  -E        ignore environment variables\n"
   "  -W        turn warnings on\n"
+  "  --debug   launch visual CPU / bytecode debugger\n"
   "  --        stop handling options\n"
   "  -         stop handling options and execute stdin\n"
   ,
@@ -282,6 +283,7 @@ static int handle_script (lua_State *L, char **argv) {
 #define has_e   8 /* -e */
 #define has_E   16  /* -E */
 #define has_engine 32 /* -engine */
+#define has_debug 64 /* --debug or -debug */
 
 
 /*
@@ -308,6 +310,16 @@ static int collectargs (char **argv, int *first) {
 	return args;  /* stop handling options */
     switch (argv[i][1]) {  /* else check option */
       case '-':  /* '--' */
+        if (strcmp(argv[i], "--debug") == 0) {
+            args |= has_debug;
+            break;
+        }
+        if (strcmp(argv[i], "--engine") == 0) {
+            if (argv[i+1] == NULL) return has_error;
+            args |= has_engine;
+            i++;
+            break;
+        }
 	if (argv[i][2] != '\0')  /* extra characters after '--'? */
 	  return has_error;  /* invalid option */
 	/* if there is a script name, it comes after '--' */
@@ -315,6 +327,12 @@ static int collectargs (char **argv, int *first) {
 	return args;
       case '\0':  /* '-' */
 	return args;  /* script "name" is '-' */
+      case 'd':
+        if (strcmp(argv[i], "-debug") == 0) {
+            args |= has_debug;
+            break;
+        }
+        return has_error;
       case 'E':
 	if (argv[i][2] != '\0')  /* extra characters? */
 	  return has_error;  /* invalid option */
@@ -756,6 +774,15 @@ static int pmain (lua_State *L) {
   else
     l_getenv = &getenv;
   
+  if (args & has_debug) {
+      /* Launch Visual Bytecode / CPU Debugger */
+      const char *script_file = (script > 0) ? argv[script] : NULL;
+      extern int engine_launch_debugger(lua_State *L, const char *script_path, int argc, char **argv);
+      luai_openlibs(L);
+      createargtable(L, argv, argc, script);
+      return engine_launch_debugger(L, script_file, argc, argv);
+  }
+
   if (args & has_engine) {
       /* Launch Engine Editor or specific engine mode */
       const char *mode = "animation";

@@ -190,6 +190,45 @@ while (1) {
         </div>
       </section>
 
+      <section class="doc-section">
+        <h2>4. Interactive Live Visual Bytecode &amp; CPU Debugger (<code>--debug</code>)</h2>
+        <p>
+          PyLua includes an integrated <strong>x64dbg / OllyDbg-style live visual CPU and bytecode debugger</strong>. It allows developers to inspect instruction-level VM execution in real time with graphical disassembly, branching flow arrows, live register tracking, and breakpoints.
+        </p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>Terminal</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-comment"># Launch any script inside the live CPU/bytecode debugger:</span>
+pylua --debug my_script.lua</code></pre>
+        </div>
+
+        <h3>Debugger Interface Elements</h3>
+        <ul>
+          <li><strong>Disassembly Table:</strong> Displays the function's bytecode instructions with hex addresses (<code>0000</code>), 32-bit machine bytes (e.g. <code>43 00 80 00</code>), decoded opcode and operands (<code>OP_LOADK R(0), K(1)</code>), and evaluated comments.</li>
+          <li><strong>Visual Jump Arrows:</strong> Colored branch lines connect jump instructions (<code>OP_JMP</code>, <code>OP_FORLOOP</code>) directly to destination target addresses with directional arrowheads, highlighting loop and branch structures.</li>
+          <li><strong>Execution Pointer:</strong> A bright indicator (<code>&blacktriangleright; PC</code>) highlights the currently paused or active instruction.</li>
+          <li><strong>Virtual Registers Panel:</strong> Real-time inspection of <code>R[0] .. R[N]</code> with live type tags (<code>integer</code>, <code>float</code>, <code>string</code>, <code>table</code>) and contents.</li>
+          <li><strong>Constants Pool &amp; Upvalues:</strong> Full visibility into string/number constants in <code>K[0] .. K[M]</code> and closure upvalues.</li>
+          <li><strong>Multi-Tab Workspace:</strong> Switch between <code>[CPU / Disasm]</code>, <code>[Log / Console]</code>, <code>[Breakpoints]</code>, <code>[Memory / Globals]</code>, and <code>[Source Script]</code>.</li>
+        </ul>
+
+        <h3>Keyboard &amp; Mouse Controls</h3>
+        <table class="doc-table">
+          <thead>
+            <tr><th>Shortcut</th><th>Action</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>F5</code> / <code>Space</code></td><td><strong>Run / Continue</strong></td><td>Resumes script execution at full speed until the next breakpoint or pause.</td></tr>
+            <tr><td><code>F7</code></td><td><strong>Step Into</strong></td><td>Executes exactly one bytecode instruction and pauses at the next.</td></tr>
+            <tr><td><code>F8</code></td><td><strong>Step Over</strong></td><td>Steps over function calls or advances one instruction without descending into subroutines.</td></tr>
+            <tr><td><code>F2</code> / <em>Click BP</em></td><td><strong>Toggle Breakpoint</strong></td><td>Sets or clears an instruction breakpoint on the selected PC address.</td></tr>
+            <tr><td><code>P</code></td><td><strong>Pause</strong></td><td>Pauses a running script immediately.</td></tr>
+            <tr><td><code>1 .. 5</code></td><td><strong>Switch Tabs</strong></td><td>Quickly switch between CPU, Log, Breakpoints, Globals, and Source views.</td></tr>
+            <tr><td><em>Mouse Wheel</em></td><td><strong>Scroll</strong></td><td>Smoothly scrolls through disassembly, registers, console logs, or script source lines.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
       <div class="page-nav">
         <a href="index.html" class="page-nav-card prev">
           <span class="page-nav-subtitle">&larr; Previous</span>
@@ -206,3 +245,4 @@ while (1) {
   <script src="../app.js"></script>
 </body>
 </html>
+
