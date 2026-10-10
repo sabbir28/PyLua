@@ -758,9 +758,17 @@ static int pmain (lua_State *L) {
   
   if (args & has_engine) {
       /* Launch Engine Editor or specific engine mode */
+      const char *mode = "animation";
+      int a;
+      for (a = 1; a < argc; a++) {
+          if (strcmp(argv[a], "-engine") == 0 && a + 1 < argc) {
+              mode = argv[a + 1];
+              break;
+          }
+      }
       extern int engine_launch_editor(lua_State *L, const char *mode);
       luai_openlibs(L);
-      return engine_launch_editor(L, argv[script + 1]);
+      return engine_launch_editor(L, mode);
   }
 
   luai_openlibs(L);  /* open standard libraries */

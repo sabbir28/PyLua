@@ -271,8 +271,7 @@ void importstat (LexState *ls) {
   expdesc f, arg, e;
   luaX_next(ls);
   name = str_checkname(ls);
-  singlevaraux(fs, luaS_newliteral(ls->L, "require"), &f, 1);
-  if (f.k == VGLOBAL) buildglobal(ls, luaS_newliteral(ls->L, "require"), &f);
+  buildvar(ls, luaS_newliteral(ls->L, "require"), &f);
   codestring(&arg, name);
   luaK_exp2nextreg(fs, &f);
   luaK_exp2nextreg(fs, &arg);

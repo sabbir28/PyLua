@@ -36,6 +36,7 @@ static const luaL_Reg stdlibs[] = {
   {LUA_STRLIBNAME, luaopen_string},
   {LUA_TABLIBNAME, luaopen_table},
   {LUA_UTF8LIBNAME, luaopen_utf8},
+  {LUA_VECLIBNAME, luaopen_vector},
   {LUA_GUILIBNAME, luaopen_gui},
   {LUA_REQNAME, luaopen_request},
   {LUA_HASHLIBNAME, luaopen_hash},
