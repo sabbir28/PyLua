@@ -84,6 +84,11 @@ if(NOT ANDROID)
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Animation/Engine_Animation.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Tools/Engine_Editor.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Tools/Engine_Debugger.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Tools/Debugger/Debugger_Core.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Tools/Debugger/Debugger_Render.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Tools/Debugger/Debugger_Disasm.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Tools/Debugger/Debugger_UI.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Tools/Debugger/Debugger_Input.c
     )
 else()
     list(APPEND PYLUA_SOURCES
@@ -181,6 +186,8 @@ if(NOT ANDROID)
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Window
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Physics
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Assets
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Tools
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Tools/Debugger
     )
     target_link_libraries(
         pylua_static
