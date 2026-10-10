@@ -3,6 +3,7 @@
 
 #include "../include/lua.h"
 #include "../include/lauxlib.h"
+#include "../include/lualib.h"
 #include <GLFW/glfw3.h>
 #include <stdlib.h>
 #include <string.h>
@@ -312,6 +313,12 @@ static int engine_run(lua_State *L) {
 static int engine_get_dt(lua_State *L) {
     lua_pushnumber(L, engine_state.delta_time);
     return 1;
+}
+
+static int engine_stop(lua_State *L) {
+    (void)L;
+    engine_state.running = 0;
+    return 0;
 }
 
 static const luaL_Reg entity_methods[] = {

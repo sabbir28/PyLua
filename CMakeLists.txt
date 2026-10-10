@@ -5,9 +5,9 @@ cmake_minimum_required(VERSION 3.20)
 # ============================================================================
 
 project(
-        PyLua
-        VERSION 1.0.0
-        LANGUAGES C
+    PyLua
+    VERSION 1.0.0
+    LANGUAGES C
 )
 
 # ============================================================================
@@ -29,42 +29,50 @@ set(BUILD_DATA_DIR "${CMAKE_BINARY_DIR}/data")
 # ============================================================================
 
 set(PYLUA_SOURCES
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/core/lapi.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/lcode.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/lctype.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/tools/ldebug.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/core/ldo.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/bytecode/ldump.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/lfunc.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/memory/lgc.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/llex.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/memory/lmem.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/lobject.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/bytecode/lopcodes.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/impl/lparser_core.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/impl/lparser_expr.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/impl/lparser_stat.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/impl/lparser_ctrl.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/lstate.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/bytecode/lstring.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/bytecode/ltable.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/ltm.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/lundump.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/lvm.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/bytecode/lzio.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lauxlib.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lbaselib.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/ldblib.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/liolib.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lmathlib.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/loslib.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/ltablib.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lstrlib.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lutf8lib.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/loadlib.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lcorolib.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lveclib.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lhashlib.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/lapi.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/lcode.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils/lctype.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/tools/ldebug.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core/ldo.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bytecode/ldump.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/lfunc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/memory/lgc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/llex.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/memory/lmem.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/lobject.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bytecode/lopcodes.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/impl/lparser_core.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/impl/lparser_expr.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/impl/lparser_stat.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/impl/lparser_ctrl.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/lstate.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bytecode/lstring.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bytecode/ltable.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/ltm.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/parser/lundump.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/lvm.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bytecode/lzio.c
+
+    # Lua standard libraries
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lauxlib.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lbaselib.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/ldblib.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/liolib.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lmathlib.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/loslib.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/ltablib.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lstrlib.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lutf8lib.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/loadlib.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lcorolib.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lveclib.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lhashlib.c
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/linit.c
+)
+
+if(NOT ANDROID)
+    list(APPEND PYLUA_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Window/Engine_Window.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Physics/Engine_Physics.c
@@ -75,49 +83,73 @@ set(PYLUA_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Assets/Engine_Assets.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Animation/Engine_Animation.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Tools/Engine_Editor.c
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/linit.c
-)
+    )
+else()
+    list(APPEND PYLUA_SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine_stub.c
+    )
+endif()
+
+# ============================================================================
+# Platform-Specific Sources
+# ============================================================================
+
+if(WIN32)
+    list(APPEND PYLUA_SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lguilib.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lrequestlib.c
+    )
+else()
+    list(APPEND PYLUA_SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lguilib_stub.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lrequestlib_stub.c
+    )
+endif()
 
 # ============================================================================
 # Dependencies
 # ============================================================================
 
 include(FetchContent)
-FetchContent_Declare(
+
+# ----------------------------------------------------------------------------
+# GLFW
+# ----------------------------------------------------------------------------
+
+if(NOT ANDROID)
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+    set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_DLL ON CACHE BOOL "" FORCE)
+
+    FetchContent_Declare(
         glfw
         GIT_REPOSITORY https://github.com/glfw/glfw.git
         GIT_TAG 3.3.8
-)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_DLL ON CACHE BOOL "" FORCE)
-set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(glfw)
+    )
+
+    FetchContent_MakeAvailable(glfw)
+endif()
+
+# ----------------------------------------------------------------------------
+# STB
+# ----------------------------------------------------------------------------
 
 FetchContent_Declare(
-        stb
-        GIT_REPOSITORY https://github.com/nothings/stb.git
-        GIT_TAG master
+    stb
+    GIT_REPOSITORY https://github.com/nothings/stb.git
+    GIT_TAG master
 )
+
 FetchContent_MakeAvailable(stb)
 
-
-if (WIN32)
-    list(APPEND PYLUA_SOURCES
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lguilib.c
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lrequestlib.c
-    )
-else ()
-    list(APPEND PYLUA_SOURCES
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lguilib_stub.c
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/lrequestlib_stub.c
-    )
-endif ()
+# ============================================================================
+# Main Source
+# ============================================================================
 
 set(PYLUA_MAIN
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/lua.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/lua.c
 )
 
 # ============================================================================
@@ -125,52 +157,81 @@ set(PYLUA_MAIN
 # ============================================================================
 
 add_library(
-        pylua_static
-        STATIC
-        ${PYLUA_SOURCES}
+    pylua_static
+    STATIC
+    ${PYLUA_SOURCES}
 )
+
+# ============================================================================
+# Include Directories
+# ============================================================================
 
 target_include_directories(
-        pylua_static
-        PUBLIC
+    pylua_static
+    PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${stb_SOURCE_DIR}
-        src/libraries/Engine/Window
-        src/libraries/Engine/Physics
-        src/libraries/Engine/Assets
 )
 
-target_link_libraries(
+if(NOT ANDROID)
+    target_include_directories(
         pylua_static
         PUBLIC
-        glfw
-)
-
-if (WIN32)
-    target_link_libraries(pylua_static PUBLIC winmm)
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Window
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Physics
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/Engine/Assets
+    )
+    target_link_libraries(
+        pylua_static
+        PUBLIC
+            glfw
+    )
 endif()
 
-if (WIN32)
+if(WIN32)
+    target_link_libraries(
+        pylua_static
+        PUBLIC
+            winmm
+    )
+elseif(UNIX AND NOT ANDROID AND NOT APPLE)
+    target_link_libraries(
+        pylua_static
+        PUBLIC
+            GL
+            pthread
+    )
+endif()
+
+# ============================================================================
+# Platform Definitions
+# ============================================================================
+
+if(WIN32)
     target_compile_definitions(
-            pylua_static
-            PRIVATE
+        pylua_static
+        PRIVATE
             WIN32
             _WINDOWS
             PYLUA_WINDOWS
     )
-endif ()
+endif()
 
-if (MSVC)
+# ============================================================================
+# Compiler Warnings
+# ============================================================================
+
+if(MSVC)
     target_compile_options(
-            pylua_static
-            PRIVATE
+        pylua_static
+        PRIVATE
             /W4
             /permissive-
     )
-else ()
+else()
     target_compile_options(
-            pylua_static
-            PRIVATE
+        pylua_static
+        PRIVATE
             -Wall
             -Wextra
             -Wshadow
@@ -179,21 +240,25 @@ else ()
             -Wdouble-promotion
             -Wwrite-strings
     )
-endif ()
+endif()
 
 # ============================================================================
 # Executable
 # ============================================================================
 
 add_executable(
-        pylua
-        ${PYLUA_MAIN}
+    pylua
+    ${PYLUA_MAIN}
 )
 
-if (WIN32)
+# ============================================================================
+# Executable Dependencies
+# ============================================================================
+
+if(WIN32)
     target_link_libraries(
-            pylua
-            PRIVATE
+        pylua
+        PRIVATE
             pylua_static
             glfw
             opengl32
@@ -202,27 +267,33 @@ if (WIN32)
             comctl32
             winhttp
     )
-elif (ANDROID)
+elseif(ANDROID)
     target_link_libraries(
-            pylua
-            PRIVATE
+        pylua
+        PRIVATE
             pylua_static
             log
             android
     )
-else ()
+else()
     target_link_libraries(
-            pylua
-            PRIVATE
+        pylua
+        PRIVATE
             pylua_static
+            GL
+            pthread
             m
             dl
     )
-endif ()
+endif()
+
+# ============================================================================
+# Executable Include Directories
+# ============================================================================
 
 target_include_directories(
-        pylua
-        PRIVATE
+    pylua
+    PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
@@ -231,24 +302,33 @@ target_include_directories(
 # ============================================================================
 
 set_target_properties(
-        pylua
-        PROPERTIES
+    pylua
+    PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
 set_target_properties(
-        pylua_static
-        PROPERTIES
+    pylua_static
+    PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )
+
+if(WIN32)
+    add_custom_command(
+        TARGET pylua POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:glfw>
+            $<TARGET_FILE_DIR:pylua>
+    )
+endif()
 
 # ============================================================================
 # Data Directory
 # ============================================================================
 
 file(
-        MAKE_DIRECTORY
-        "${BUILD_DATA_DIR}"
+    MAKE_DIRECTORY
+    "${BUILD_DATA_DIR}"
 )
 
 # ============================================================================

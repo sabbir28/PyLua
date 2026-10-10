@@ -1,7 +1,16 @@
 #include "Engine_Animation.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <GL/gl.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+
+#include "../../../../include/lua.h"
+#include "../../../../include/lauxlib.h"
+#include "../../../../include/lualib.h"
 
 #define ENGINE_SPRITESHEET_MT "Engine.SpriteSheet"
 #define ENGINE_ANIMATION_MT "Engine.Animation"
@@ -255,6 +264,10 @@ static int animator_load_file(lua_State *L) {
     lua_pushvalue(L, -2); lua_setiuservalue(L, -2, 1);
     luaL_getmetatable(L, ENGINE_ANIMATOR_MT); lua_setmetatable(L, -2);
     return 1;
+}
+
+static int animation_load_file(lua_State *L) {
+    return animator_load_file(L);
 }
 
 static const luaL_Reg ss_methods[] = {

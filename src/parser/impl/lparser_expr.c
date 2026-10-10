@@ -11,6 +11,7 @@
 #include "../../../include/lcode.h"
 #include "../../../include/llex.h"
 #include "../../../include/lparser.h"
+#include "../../../include/lstate.h"
 #include "lparser_priv.h"
 
 typedef struct ConsControl {
@@ -24,7 +25,7 @@ typedef struct ConsControl {
 
 #define MAX_CNST	(INT_MAX/2)
 
-static void subexpr (LexState *ls, expdesc *v, int limit);
+static BinOpr subexpr (LexState *ls, expdesc *v, int limit);
 
 static void recfield (LexState *ls, ConsControl *cc) {
   FuncState *fs = ls->fs;
@@ -267,7 +268,7 @@ static const struct { lu_byte left; lu_byte right; } priority[] = {
 
 #define UNARY_PRIORITY	12
 
-static void subexpr (LexState *ls, expdesc *v, int limit) {
+static BinOpr subexpr (LexState *ls, expdesc *v, int limit) {
   BinOpr op;
   UnOpr uop;
   luaE_incCstack(ls->L);
@@ -291,6 +292,7 @@ static void subexpr (LexState *ls, expdesc *v, int limit) {
     op = nextop;
   }
   ls->L->nCcalls--;
+  return op;
 }
 
 void expr (LexState *ls, expdesc *v) {

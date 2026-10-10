@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLua Documentation | Modern Syntax & 2D Game Engine</title>
+  <meta name="description" content="Official documentation for PyLua: High-performance Lua 5.5 dialect with Python import syntax, C-style braces, auto-local scoping, and a built-in 2D Game Engine.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="#introduction" class="nav-brand">
+        <span class="logo-badge">PyLua</span>
+        <span>Docs</span>
+      </a>
+    </div>
+
+    <div class="nav-search-container">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="docSearch" class="nav-search" placeholder="Search syntax, functions, engine APIs...">
+      <span class="search-hint">/</span>
+    </div>
+
+    <div class="nav-links">
+      <button id="themeToggle" class="nav-btn" aria-label="Toggle Theme"></button>
+      <a href="https://github.com/sabbir28/PyLua" target="_blank" rel="noopener" class="nav-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub
+      </a>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sticky Sidebar -->
+    <aside class="sidebar">
+      <div class="nav-group-title">Getting Started</div>
+      <a href="#introduction" class="sidebar-link active">Introduction</a>
+      <a href="#installation" class="sidebar-link">Installation & Setup</a>
+      <a href="#quickstart" class="sidebar-link">Quickstart Tutorial</a>
+
+      <div class="nav-group-title">Language Syntax</div>
+      <a href="#syntax-import" class="sidebar-link">Python-style Import</a>
+      <a href="#syntax-braces" class="sidebar-link">C-style Braces & If</a>
+      <a href="#syntax-functions" class="sidebar-link">Braced Functions</a>
+      <a href="#syntax-autolocal" class="sidebar-link">Auto-Local Scoping</a>
+      <a href="#syntax-operators" class="sidebar-link">Modern Operators (!=)</a>
+      <a href="#syntax-compatibility" class="sidebar-link">Lua 5.4 Compatibility</a>
+
+      <div class="nav-group-title">Coding Style Guide</div>
+      <a href="#style-guide" class="sidebar-link">Idiomatic Style Rules</a>
+      <a href="#style-architecture" class="sidebar-link">Ecosystem Patterns</a>
+
+      <div class="nav-group-title">Standard Libraries</div>
+      <a href="#lib-vector" class="sidebar-link">Vector2 & Vector3</a>
+      <a href="#lib-hash" class="sidebar-link">Hash & Cryptography</a>
+      <a href="#lib-gui" class="sidebar-link">Native Windows GUI</a>
+      <a href="#lib-request" class="sidebar-link">HTTP Requests</a>
+      <a href="#lib-standard" class="sidebar-link">Standard Lua Modules</a>
+
+      <div class="nav-group-title">2D Game Engine</div>
+      <a href="#engine-architecture" class="sidebar-link">Engine Architecture</a>
+      <a href="#engine-window" class="sidebar-link">Window & Multi-Monitor</a>
+      <a href="#engine-graphics" class="sidebar-link">Graphics & Rendering</a>
+      <a href="#engine-physics" class="sidebar-link">Physics & Collisions</a>
+      <a href="#engine-input" class="sidebar-link">Input System</a>
+      <a href="#engine-audio" class="sidebar-link">Audio Subsystem</a>
+      <a href="#engine-assets" class="sidebar-link">Asset Management</a>
+      <a href="#engine-animation" class="sidebar-link">Animation & Animator</a>
+      <a href="#engine-ui" class="sidebar-link">Immediate-Mode UI</a>
+      <a href="#engine-scene" class="sidebar-link">Scene & Entities</a>
+      <a href="#engine-screen" class="sidebar-link">Screen Management</a>
+      <a href="#engine-workers" class="sidebar-link">Threaded Workers</a>
+
+      <div class="nav-group-title">Full Examples</div>
+      <a href="#example-snake" class="sidebar-link">Snake Game</a>
+      <a href="#example-workers" class="sidebar-link">Multithreaded Music</a>
+    </aside>
+
+    <!-- Main Documentation Body -->
+    <main class="content">
+      <!-- Hero Banner -->
+      <div class="hero">
+        <h1 class="hero-title">The PyLua Programming Language</h1>
+        <p class="hero-desc">
+          PyLua blends the lightweight performance and speed of Lua with Python-style imports, modern C-style curly brace control flow, auto-local variable safety, and a built-in hardware-accelerated 2D game engine.
+        </p>
+        <div class="hero-actions">
+          <a href="#quickstart" class="btn-primary">Get Started</a>
+          <a href="#engine-architecture" class="btn-secondary">Explore Game Engine</a>
+        </div>
+      </div>
+
+      <!-- Feature Highlight Grid -->
+      <div class="feature-grid">
+        <div class="feature-card">
+          <span class="feature-icon">⚡</span>
+          <h4>Python-Inspired Imports</h4>
+          <p>Clean <code>import engine</code> and <code>import os</code> syntax without tedious <code>require()</code> boilerplate.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🛡️</span>
+          <h4>Auto-Local Variable Safety</h4>
+          <p>Variable assignments default to local scope instead of polluting global state, preventing subtle bugs.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">✨</span>
+          <h4>C-Style Curly Braces</h4>
+          <p>Write familiar <code>if (cond) { ... }</code>, <code>fn = function() { ... }</code>, and <code>!=</code> operators alongside traditional Lua.</p>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🎮</span>
+          <h4>Complete 2D Game Engine</h4>
+          <p>Built-in physics, 2D sprites, multi-monitor windowing, audio engine, animator system, and multithreaded workers.</p>
+        </div>
+      </div>
+
+      <!-- SECTION: Introduction -->
+      <section id="introduction" class="doc-section">
+        <h2>Introduction to PyLua</h2>
+        <p>
+          <strong>PyLua</strong> is a next-generation programming language built directly on an optimized Lua core (v5.5.1). Designed for game developers, tool creators, and software engineers who desire the rapid execution and lightweight footprint of Lua without the syntax quirks (such as mandatory <code>then ... end</code> blocks, unexpected global variable leaks, and missing math primitives).
+        </p>
+        <p>
+          Whether you are building cross-platform 2D desktop games, scripting automation tools, or embedding a fast scripting language into an application, PyLua gives you an expressive syntax with batteries included.
+        </p>
+      </section>
+
+      <!-- SECTION: Installation -->
+      <section id="installation" class="doc-section">
+        <h2>Installation & Setup</h2>
+        <p>PyLua is distributed as a single standalone executable and as an installable package for Windows, Linux, and Android.</p>
+
+        <h3>Windows (Installer or Standalone)</h3>
+        <p>Download the latest <code>PyLua-Setup.exe</code> from the Releases page. The installer registers <code>pylua.exe</code> in your system <code>PATH</code> and installs all runtime dependencies including GLFW.</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PowerShell</span><button class="copy-btn">Copy</button></div>
+          <pre><code># Verify your installation
+pylua -v
+# Output: Lua 5.5.1  The LEngine</code></pre>
+        </div>
+
+        <h3>Building from Source (CMake + Ninja)</h3>
+        <p>PyLua builds with CMake 3.20+ and any standard C99 compiler (MSVC on Windows, GCC/Clang on Linux):</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>Bash / PowerShell</span><button class="copy-btn">Copy</button></div>
+          <pre><code>git clone https://github.com/sabbir28/PyLua.git
+cd PyLua
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Quickstart -->
+      <section id="quickstart" class="doc-section">
+        <h2>Quickstart Tutorial</h2>
+        <p>Create a file named <code>main.lua</code> and run it with <code>pylua main.lua</code>:</p>
+
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>-- main.lua
+<span class="token-keyword">import</span> <span class="token-builtin">os</span>
+<span class="token-keyword">import</span> <span class="token-builtin">engine</span>
+
+print(<span class="token-string">"Welcome to PyLua!"</span>)
+
+-- Variable assignment is auto-local!
+score = 100
+playerName = <span class="token-string">"Hero"</span>
+
+-- C-style conditional with parentheses and braces
+<span class="token-keyword">if</span> (score >= 100) {
+    print(playerName .. <span class="token-string">" leveled up!"</span>)
+} <span class="token-keyword">else</span> {
+    print(<span class="token-string">"Keep training..."</span>)
+}</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Python-style Import -->
+      <section id="syntax-import" class="doc-section">
+        <h2>Python-Style <code>import</code></h2>
+        <p>
+          Instead of declaring local variables and calling <code>require()</code> repeatedly, PyLua introduces the top-level <code>import</code> keyword:
+        </p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-keyword">import</span> engine
+<span class="token-keyword">import</span> os
+<span class="token-keyword">import</span> vector
+
+-- Equivalent to:
+-- local engine = require("engine")
+-- local os = require("os")
+-- local vector = require("vector")</code></pre>
+        </div>
+        <div class="callout tip">
+          <div class="callout-title">💡 Standard <code>require()</code> Compatibility</div>
+          <p>Traditional <code>local mylib = require("mylib")</code> remains 100% functional and compatible.</p>
+        </div>
+      </section>
+
+      <!-- SECTION: C-style Braces & If -->
+      <section id="syntax-braces" class="doc-section">
+        <h2>C-Style Curly Braces & Conditionals</h2>
+        <p>
+          PyLua supports curly braces <code>{ ... }</code> for blocks and optional parentheses around conditional expressions. You can freely use <code>if (cond) { ... } elseif (cond) { ... } else { ... }</code>:
+        </p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>speed = 45
+
+<span class="token-keyword">if</span> (speed > 60) {
+    print(<span class="token-string">"Too fast!"</span>)
+} <span class="token-keyword">elseif</span> (speed == 45) {
+    print(<span class="token-string">"Cruising speed."</span>)
+} <span class="token-keyword">else</span> {
+    print(<span class="token-string">"Too slow."</span>)
+}</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Braced Functions -->
+      <section id="syntax-functions" class="doc-section">
+        <h2>Braced Function Declarations</h2>
+        <p>
+          Anonymous and table-member functions can use curly braces <code>function(args) { ... }</code>:
+        </p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>-- Callback with curly braces
+onPlayerHit = <span class="token-keyword">function</span>(damage) {
+    health = health - damage
+    <span class="token-keyword">return</span> health > 0
+}
+
+-- Table method definition
+player = {
+    x = 10,
+    y = 20,
+    move = <span class="token-keyword">function</span>(self, dx, dy) {
+        self.x = self.x + dx
+        self.y = self.y + dy
+    }
+}</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Auto-Local Scoping -->
+      <section id="syntax-autolocal" class="doc-section">
+        <h2>Auto-Local Variable Scoping</h2>
+        <p>
+          One of the biggest pitfalls in standard Lua is accidentally forgetting the <code>local</code> keyword, causing variables to leak into the global environment <code>_G</code>.
+        </p>
+        <p>
+          In PyLua, assigning to an undeclared identifier automatically declares it in the <strong>current local scope</strong>:
+        </p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-keyword">function</span> calculateArea(width, height) {
+    area = width * height  -- Automatically scoped locally!
+    <span class="token-keyword">return</span> area
+}
+
+calculateArea(5, 10)
+print(area)  -- Output: nil (does not leak to global scope!)</code></pre>
+        </div>
+        <div class="callout tip">
+          <div class="callout-title">Explicit Globals</div>
+          <p>To explicitly create or modify a global variable from inside a function, assign directly to <code>_G.myVar = value</code>.</p>
+        </div>
+      </section>
+
+      <!-- SECTION: Modern Operators -->
+      <section id="syntax-operators" class="doc-section">
+        <h2>Modern Operators</h2>
+        <p>PyLua introduces modern operators common across C, Python, and JavaScript:</p>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Operator</th><th>Description</th><th>Example</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>!=</code></td><td>Not equal to (alternative to <code>~=</code>)</td><td><code>if (x != 0) { ... }</code></td></tr>
+              <tr><td><code>//</code></td><td>Integer floor division</td><td><code>q = 7 // 2 -- Result: 3</code></td></tr>
+              <tr><td><code>&</code>, <code>|</code>, <code>~</code></td><td>Bitwise AND, OR, XOR</td><td><code>flags = mask & 0xFF</code></td></tr>
+              <tr><td><code><<</code>, <code>>></code></td><td>Bitwise left and right shift</td><td><code>val = 1 << 4 -- Result: 16</code></td></tr>
+              <tr><td><code>..</code></td><td>String concatenation</td><td><code>msg = "Score: " .. score</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION: Lua 5.4 Compatibility -->
+      <section id="syntax-compatibility" class="doc-section">
+        <h2>Lua 5.4 Full Compatibility</h2>
+        <p>PyLua is 100% backward compatible with existing Lua 5.4 codebases. Traditional syntax is completely supported:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>Standard Lua Syntax</span><button class="copy-btn">Copy</button></div>
+          <pre><code>-- Standard Lua if ... then ... end
+if condition then
+    print("Standard syntax still works!")
+end
+
+-- Standard repeat ... until
+local count = 0
+repeat
+    count = count + 1
+until count == 5</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Style Guide -->
+      <section id="style-guide" class="doc-section">
+        <h2>Idiomatic PyLua Coding Style Guide</h2>
+        <p>Follow these community guidelines for writing clean, maintainable PyLua code:</p>
+        <ul>
+          <li><strong>Imports:</strong> Place all <code>import</code> statements at the very top of each file.</li>
+          <li><strong>Naming:</strong>
+            <ul>
+              <li><code>camelCase</code> for variables and function names (<code>playerSpeed</code>, <code>getDeltaTime()</code>).</li>
+              <li><code>PascalCase</code> for Screen tables, Entities, and Metatables (<code>GameScreen</code>, <code>MenuScreen</code>).</li>
+              <li><code>UPPER_SNAKE_CASE</code> for constants (<code>MAX_ENTITIES = 1024</code>).</li>
+            </ul>
+          </li>
+          <li><strong>Braces:</strong> Use 1TBS (One True Brace Style) with opening braces on the same line: <code>if (cond) {</code>.</li>
+          <li><strong>Parentheses:</strong> Enclose conditional expressions in parentheses for clarity: <code>if (player.isAlive) { ... }</code>.</li>
+        </ul>
+      </section>
+
+      <!-- SECTION: Extended Libraries - Vector -->
+      <section id="lib-vector" class="doc-section">
+        <h2>Extended Library: <code>vector</code></h2>
+        <p>PyLua includes a high-performance C-implemented 2D and 3D vector library with operator overloading:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-keyword">import</span> vector
+
+-- 2D Vectors
+v1 = vector.Vector2(3, 4)
+v2 = vector.Vector2(1, 2)
+v3 = v1 + v2          -- (4, 6)
+len = v1:length()     -- 5.0
+dot = v1:dot(v2)      -- 3*1 + 4*2 = 11
+
+-- 3D Vectors
+p1 = vector.Vector3(1, 0, 0)
+p2 = vector.Vector3(0, 1, 0)
+cross = p1:cross(p2)  -- Vector3(0, 0, 1)</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Extended Libraries - Hash -->
+      <section id="lib-hash" class="doc-section">
+        <h2>Extended Library: <code>hash</code></h2>
+        <p>Compute cryptographic hashes quickly:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-keyword">import</span> hash
+
+checksum = hash.md5(<span class="token-string">"hello world"</span>)
+print(checksum)  -- 5eb63bbbe01eeed093cb22bb8f5acdc3</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Extended Libraries - GUI -->
+      <section id="lib-gui" class="doc-section">
+        <h2>Extended Library: <code>gui</code> (Windows)</h2>
+        <p>Create native Windows desktop windows and user interface controls with ease:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-keyword">import</span> gui
+
+win = gui.Window(<span class="token-string">"My Tool"</span>, 100, 100, 400, 300)
+lbl = win:Label(<span class="token-string">"Press the button:"</span>, 20, 20, 200, 30)
+btn = win:Button(<span class="token-string">"Click Me"</span>, 20, 60, 120, 35)
+
+btn:OnClick(<span class="token-keyword">function</span>() {
+    print(<span class="token-string">"Button clicked!"</span>)
+})
+
+win:Show()</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Extended Libraries - Request -->
+      <section id="lib-request" class="doc-section">
+        <h2>Extended Library: <code>request</code></h2>
+        <p>Perform HTTP requests with a Python-inspired requests API:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-keyword">import</span> request
+
+res = request.get(<span class="token-string">"https://api.github.com/zen"</span>)
+print(<span class="token-string">"Status:"</span>, res.status_code)
+print(<span class="token-string">"Quote:"</span>, res.body)</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Engine Architecture -->
+      <section id="engine-architecture" class="doc-section">
+        <h2>PyLua 2D Game Engine Architecture</h2>
+        <p>
+          The PyLua Game Engine is an integrated, hardware-accelerated 2D game framework inspired by Unity and LÖVE2D. It features a complete game loop, physics integration, immediate-mode rendering, and threaded workers.
+        </p>
+
+        <h3>The Main Game Loop: <code>engine.run(config)</code></h3>
+        <p>The engine handles window polling, physics simulation, entity script updates, and frame rendering automatically:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code><span class="token-keyword">import</span> engine
+
+win = engine.Window.create(<span class="token-string">"My Game"</span>, 1280, 720)
+
+engine.run({
+    window = win,
+    
+    init = <span class="token-keyword">function</span>() {
+        print(<span class="token-string">"Game initialized!"</span>)
+    },
+    
+    update = <span class="token-keyword">function</span>(dt) {
+        -- Runs every frame. dt is delta time in seconds.
+        <span class="token-keyword">if</span> (engine.Input.isKeyJustPressed(<span class="token-string">"escape"</span>)) {
+            engine.stop()
+        }
+    },
+    
+    draw = <span class="token-keyword">function</span>() {
+        engine.Graphics.clear(0.1, 0.1, 0.15, 1.0)
+        engine.Graphics.drawText(<span class="token-string">"Running PyLua 2D"</span>, 20, 20)
+    }
+})</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Window Subsystem -->
+      <section id="engine-window" class="doc-section">
+        <h2>Window & Multi-Monitor Subsystem (<code>engine.Window</code>)</h2>
+        <p>Manage application windows, inspect attached displays, and switch between fullscreen and windowed modes:</p>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Function / Method</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><code>Window.create(title, w, h, [fullscreen, monitorIdx])</code></td><td>Creates and opens an OpenGL GLFW window.</td></tr>
+              <tr><td><code>Window.getMonitors()</code></td><td>Returns a table of all connected monitors with resolutions and positions.</td></tr>
+              <tr><td><code>win:getSize()</code></td><td>Returns <code>width, height</code> of the window.</td></tr>
+              <tr><td><code>win:setSize(w, h)</code></td><td>Resizes the window.</td></tr>
+              <tr><td><code>win:setTitle(title)</code></td><td>Updates window caption.</td></tr>
+              <tr><td><code>win:close()</code></td><td>Signals window destruction.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION: Graphics Subsystem -->
+      <section id="engine-graphics" class="doc-section">
+        <h2>Graphics & Rendering (<code>engine.Graphics</code>)</h2>
+        <p>Render colored shapes, sprites, and bitmap text:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>-- Clear screen with RGBA (0.0 to 1.0)
+engine.Graphics.clear(0.08, 0.08, 0.12, 1.0)
+
+-- Draw filled rectangle: (x, y, w, h, r, g, b, a)
+engine.Graphics.drawRect(100, 100, 200, 50, 0.2, 0.6, 1.0, 1.0)
+
+-- Draw sprite: (texture, x, y, [w, h])
+engine.Graphics.drawSprite(myTexture, 300, 200, 64, 64)
+
+-- Draw text: (text, x, y, [scale, r, g, b, a])
+engine.Graphics.drawText("Score: 500", 20, 20, 2.0, 1, 1, 1, 1)</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Physics Subsystem -->
+      <section id="engine-physics" class="doc-section">
+        <h2>Physics & Collisions (<code>engine.Physics</code>)</h2>
+        <p>Create 2D physics worlds, static obstacles, and dynamic bodies:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>-- Create world with gravity (gx, gy)
+world = engine.Physics.createWorld(0, -980)
+
+-- Add static ground: (type=0: static, x, y)
+ground = world:addBody(0, 400, 50)
+ground:setRect(800, 20)
+
+-- Add dynamic ball: (type=1: dynamic, x, y)
+ball = world:addBody(1, 400, 500)
+ball:setCircle(25)
+ball:setVelocity(100, 0)
+
+-- Step physics in update
+world:step(dt)
+x, y = ball:getPosition()</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Input Subsystem -->
+      <section id="engine-input" class="doc-section">
+        <h2>Input Subsystem (<code>engine.Input</code>)</h2>
+        <p>Inspect mouse and keyboard states with single-frame latching:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>-- Continuous key down (held down)
+if (engine.Input.isKeyDown("space") || engine.Input.isKeyDown(32)) {
+    player:jump()
+}
+
+-- Triggered only on the first frame pressed
+if (engine.Input.isKeyJustPressed("enter")) {
+    startGame()
+}
+
+-- Mouse position
+mx, my = engine.Input.getMousePosition()</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Audio Subsystem -->
+      <section id="engine-audio" class="doc-section">
+        <h2>Audio Subsystem (<code>engine.Audio</code>)</h2>
+        <p>High-performance sound playback backed by miniaudio:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>-- Play sound: path, [volume, loop, pitch] -> channelId
+laserCh = engine.Audio.play("sounds/laser.wav", 0.8, false, 1.0)
+
+-- Background music on loop
+bgmCh = engine.Audio.play("music/theme.ogg", 0.5, true)
+
+-- Control playback
+engine.Audio.pause(bgmCh)
+engine.Audio.resume(bgmCh)
+engine.Audio.setVolume(bgmCh, 0.75)
+engine.Audio.stop(laserCh)</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Assets -->
+      <section id="engine-assets" class="doc-section">
+        <h2>Asset Management (<code>engine.Assets</code>)</h2>
+        <p>Load PNG/JPEG textures with hardware caching:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>tex = engine.Assets.loadTexture("assets/sheet.png")
+width, height = tex:getSize()</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Animation -->
+      <section id="engine-animation" class="doc-section">
+        <h2>Animation & Animator Subsystem (<code>engine.Animation</code>)</h2>
+        <p>Sprite sheet slicing, timed keyframes, and multi-sequence state machines:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>-- 1. Create a SpriteSheet from texture with 64x64 frame sizes
+sheet = engine.Animation.newSpriteSheet(tex, 64, 64)
+
+-- 2. Define keyframed animation
+walkAnim = engine.Animation.new(sheet, {
+    {frame = 0, duration = 0.15},
+    {frame = 1, duration = 0.15},
+    {frame = 2, duration = 0.15}
+}, true) -- loop = true
+
+-- 3. Draw in game draw()
+walkAnim:draw(playerX, playerY, totalTime)
+
+-- 4. Or load complete multi-sequence Animator from .panim editor file
+animator = engine.Animation.loadAnimator("animator.panim")
+animator:play("run")
+animator:draw(x, y, totalTime)</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: UI Subsystem -->
+      <section id="engine-ui" class="doc-section">
+        <h2>Immediate-Mode UI (<code>engine.UI</code>)</h2>
+        <p>Build interactive HUDs and menus with zero boilerplate:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>-- Inside draw() function:
+engine.UI.panel(100, 100, 300, 240, 0.1, 0.1, 0.15, 0.9)
+engine.UI.label("MAIN MENU", 160, 130, 2.0)
+
+if (engine.UI.button("START GAME", 150, 180, 200, 45)) {
+    engine.Screen.set(GameScreen)
+}
+
+if (engine.UI.button("QUIT", 150, 240, 200, 45)) {
+    engine.stop()
+}</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Scene & Entities -->
+      <section id="engine-scene" class="doc-section">
+        <h2>Scene & Entity System (<code>engine.Scene</code>)</h2>
+        <p>Attach multiple modular scripts to game entities. The engine automatically updates them every frame:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>player = engine.Scene.createEntity("Player")
+
+-- Movement component
+movementScript = {
+    update = function(self, dt) {
+        if (engine.Input.isKeyDown("d")) {
+            print("Moving right...")
+        }
+    }
+}
+
+-- Health component
+healthScript = {
+    hp = 100,
+    update = function(self, dt) {
+        if (self.hp <= 0) {
+            player:destroy()
+        }
+    }
+}
+
+player:addScript(movementScript)
+player:addScript(healthScript)</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Screen Management -->
+      <section id="engine-screen" class="doc-section">
+        <h2>Screen Management (<code>engine.Screen</code>)</h2>
+        <p>Switch between menus, levels, and game over screens cleanly with lifecycle callbacks:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>PyLua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>MenuScreen = {
+    onEnter = function(self) {
+        print("Opened Menu")
+    },
+    update = function(self, dt) {
+        if (engine.Input.isKeyJustPressed("space")) {
+            engine.Screen.set(PlayScreen)
+        }
+    },
+    draw = function(self) {
+        engine.Graphics.drawText("Press SPACE to Play", 200, 300)
+    },
+    onExit = function(self) {
+        print("Exiting Menu")
+    }
+}
+
+engine.Screen.set(MenuScreen)</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Threaded Workers -->
+      <section id="engine-workers" class="doc-section">
+        <h2>Threaded Workers (<code>engine.createWorker</code>)</h2>
+        <p>Offload heavy tasks, pathfinding, or audio streaming to a background thread without dropping frames:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>Main Script</span><button class="copy-btn">Copy</button></div>
+          <pre><code>import engine
+
+-- Starts a background thread running in its own Lua VM
+worker = engine.createWorker("heavy_compute.lua")
+
+-- When done:
+engine.destroyWorker(worker)</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Full Example Snake -->
+      <section id="example-snake" class="doc-section">
+        <h2>Complete Game Example: Snake XL</h2>
+        <p>A full snake game demonstrating Screen management, immediate UI, input, and graphics:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>snake.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>import engine
+
+win = engine.Window.create("PyLua Snake", 640, 640)
+GRID = 20
+
+GameScreen = {
+    onEnter = function(self) {
+        self.snake = {{x=10, y=10}, {x=10, y=11}}
+        self.dir = {x=0, y=-1}
+        self.food = {x=5, y=5}
+        self.score = 0
+        self.timer = 0
+    },
+    
+    update = function(self, dt) {
+        if (engine.Input.isKeyJustPressed("w")) { self.dir = {x=0, y=-1} }
+        if (engine.Input.isKeyJustPressed("s")) { self.dir = {x=0, y=1} }
+        if (engine.Input.isKeyJustPressed("a")) { self.dir = {x=-1, y=0} }
+        if (engine.Input.isKeyJustPressed("d")) { self.dir = {x=1, y=0} }
+        
+        self.timer = self.timer + dt
+        if (self.timer >= 0.15) {
+            self.timer = 0
+            head = {x = self.snake[1].x + self.dir.x, y = self.snake[1].y + self.dir.y}
+            table.insert(self.snake, 1, head)
+            
+            if (head.x == self.food.x && head.y == self.food.y) {
+                self.score = self.score + 10
+                self.food = {x = math.random(0, GRID-1), y = math.random(0, GRID-1)}
+            } else {
+                table.remove(self.snake)
+            }
+        }
+    },
+    
+    draw = function(self) {
+        engine.Graphics.clear(0.08, 0.08, 0.12, 1.0)
+        
+        -- Draw Food
+        engine.Graphics.drawRect(self.food.x * 32, self.food.y * 32, 30, 30, 1.0, 0.2, 0.2, 1.0)
+        
+        -- Draw Snake
+        for _, part in ipairs(self.snake) {
+            engine.Graphics.drawRect(part.x * 32, part.y * 32, 30, 30, 0.2, 0.8, 0.4, 1.0)
+        }
+        
+        engine.Graphics.drawText("Score: " .. self.score, 10, 10, 2.0)
+    }
+}
+
+engine.Screen.set(GameScreen)
+engine.run({ window = win })</code></pre>
+        </div>
+      </section>
+
+      <!-- SECTION: Full Example Workers -->
+      <section id="example-workers" class="doc-section">
+        <h2>Complete Example: Multithreaded Worker</h2>
+        <p>Run background music or worker loops completely in parallel:</p>
+        <div class="code-block-wrapper">
+          <div class="code-header"><span>music_worker.lua</span><button class="copy-btn">Copy</button></div>
+          <pre><code>-- music_worker.lua
+import engine
+
+print("[Worker] Initializing Background Audio...")
+ch = engine.Audio.play("assets/bgm.wav", 0.6, true)
+
+while true {
+    -- Thread keeps playing music independently of the main game loop
+    engine.Window.pollEvents()
+}</code></pre>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer style="margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--bg-card-border); color: var(--text-muted); font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: gap;">
+        <div>&copy; 2026 PyLua Project. Built with performance and elegance.</div>
+        <div>Engine v1.0.0 &bull; Lua 5.5.1</div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+

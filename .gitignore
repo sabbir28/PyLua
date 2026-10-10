@@ -13,3 +13,17 @@ testes/libs/all
 
 temp
 lua
+
+# Build & IDE files
+.vs/
+out/
+build/
+build-*/
+bin/
+lib/
+packages/
+*.exe
+*.dll
+*.lib
+*.pdb
+*.exp

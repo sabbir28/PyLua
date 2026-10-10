@@ -60,6 +60,7 @@ Labeldesc *findlabel (LexState *ls, TString *name, int ilb);
 int newlabelentry (LexState *ls, Labellist *l, TString *name, int line, int pc);
 int newgotoentry (LexState *ls, TString *name, int line);
 void createlabel (LexState *ls, TString *name, int line, int last);
+void solvegotos (FuncState *fs, BlockCnt *bl);
 void check_readonly (LexState *ls, expdesc *e);
 Vardesc *getlocalvardesc (FuncState *fs, int vidx);
 lu_byte reglevel (FuncState *fs, int nvar);
@@ -73,6 +74,7 @@ void constructor (LexState *ls, expdesc *t);
 void yindex (LexState *ls, expdesc *v);
 void fieldsel (LexState *ls, expdesc *v);
 void funcargs (LexState *ls, expdesc *f);
+void suffixedexp (LexState *ls, expdesc *v);
 
 /* Prototypes from lparser_stat.c */
 void statement (LexState *ls);

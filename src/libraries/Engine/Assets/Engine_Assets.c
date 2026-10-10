@@ -11,6 +11,7 @@
 #include <string.h>
 
 #define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 #include <GLFW/glfw3.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -65,7 +66,6 @@ static int assets_load_texture(lua_State *L) {
 
     GLint format = (c == 4) ? GL_RGBA : GL_RGB;
     glTexImage2D(GL_TEXTURE_2D, 0, format, w, h, 0, format, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
 
     stbi_image_free(data);
 
