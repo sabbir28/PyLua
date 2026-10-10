@@ -42,6 +42,7 @@ void dbg_state_init(GLFWwindow *window, const char *script_path) {
     g_dbg.log_sb_drag_offset_y = 0.0f;
     g_dbg.src_sb_dragging = 0;
     g_dbg.src_sb_drag_offset_y = 0.0f;
+    g_dbg.last_src_active_line = 0;
     if (script_path) {
         strncpy(g_dbg.script_path, script_path, sizeof(g_dbg.script_path) - 1);
         g_dbg.script_path[sizeof(g_dbg.script_path) - 1] = '\0';

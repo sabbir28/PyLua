@@ -476,20 +476,32 @@ void render_debugger_gui(lua_State *L) {
         }
     } else if (g_dbg.active_tab == TAB_LOG) {
         /* FULL LOG & CONSOLE VIEW */
+        float sb_w = 14.0f;
+        float sb_x = (float)g_dbg.win_w - sb_w;
+        float sb_y = main_y + 22.0f;
+        float sb_h = main_h - 22.0f;
+        float log_w = (float)g_dbg.win_w - sb_w;
+
         dbg_draw_rect(0, main_y, (float)g_dbg.win_w, 22, 0.16f, 0.16f, 0.19f, 1.0f);
+        dbg_draw_line(0, main_y + 22, (float)g_dbg.win_w, main_y + 22, 1.0f, 0.25f, 0.25f, 0.28f, 1.0f);
         dbg_draw_text(15, main_y + 6, "TIMESTAMP", 0.9f, 0.9f, 0.9f, 1.15f);
         dbg_draw_text(120, main_y + 6, "LEVEL", 0.9f, 0.9f, 0.9f, 1.15f);
         dbg_draw_text(220, main_y + 6, "CONSOLE OUTPUT / EVENT MESSAGE", 0.9f, 0.9f, 0.9f, 1.15f);
 
-        float log_y = main_y + 24.0f;
-        int visible_logs = (int)((main_h - 26) / 20.0f);
+        int visible_logs = (int)(sb_h / 20.0f);
+        int max_scroll = g_dbg.log_count - visible_logs;
+        if (max_scroll < 0) max_scroll = 0;
+
+        if (g_dbg.log_scroll > max_scroll) g_dbg.log_scroll = max_scroll;
+        if (g_dbg.log_scroll < 0) g_dbg.log_scroll = 0;
+
         for (int i = 0; i < visible_logs; i++) {
             int log_idx = g_dbg.log_scroll + i;
             if (log_idx >= g_dbg.log_count) break;
             LogEntry *e = &g_dbg.logs[(g_dbg.log_start + log_idx) % MAX_LOG_LINES];
-            float cur_ly = log_y + (float)i * 20.0f;
+            float cur_ly = sb_y + (float)i * 20.0f;
 
-            if (i % 2 == 1) dbg_draw_rect(0, cur_ly, (float)g_dbg.win_w, 20, 0.13f, 0.13f, 0.15f, 1.0f);
+            if (i % 2 == 1) dbg_draw_rect(0, cur_ly, log_w, 20, 0.13f, 0.13f, 0.15f, 1.0f);
 
             char time_str[32];
             snprintf(time_str, sizeof(time_str), "[%06.2fs]", e->timestamp);
@@ -505,6 +517,78 @@ void render_debugger_gui(lua_State *L) {
                 dbg_draw_text(120, cur_ly + 4, "DEBUG", 0.0f, 0.75f, 1.0f, 1.15f);
                 dbg_draw_text(220, cur_ly + 4, e->text, 0.6f, 0.85f, 1.0f, 1.2f);
             }
+        }
+
+        /* Vertical Scrollbar */
+        dbg_draw_rect(sb_x, sb_y, sb_w, sb_h, 0.12f, 0.12f, 0.14f, 1.0f);
+        dbg_draw_line(sb_x, sb_y, sb_x, sb_y + sb_h, 1.0f, 0.22f, 0.22f, 0.26f, 1.0f);
+
+        if (g_dbg.log_count > 0 && max_scroll > 0) {
+            float ratio = (float)visible_logs / (float)g_dbg.log_count;
+            float thumb_h = sb_h * ratio;
+            if (thumb_h < 26.0f) thumb_h = 26.0f;
+            if (thumb_h > sb_h - 4.0f) thumb_h = sb_h - 4.0f;
+            float avail_h = sb_h - thumb_h;
+
+            if (g_dbg.log_sb_dragging) {
+                if (g_dbg.mouse_left_down) {
+                    float new_thumb_y = (float)g_dbg.mouse_y - g_dbg.log_sb_drag_offset_y;
+                    float s_ratio = (new_thumb_y - sb_y) / avail_h;
+                    if (s_ratio < 0.0f) s_ratio = 0.0f;
+                    if (s_ratio > 1.0f) s_ratio = 1.0f;
+                    g_dbg.log_scroll = (int)(s_ratio * (float)max_scroll + 0.5f);
+                } else {
+                    g_dbg.log_sb_dragging = 0;
+                }
+            }
+
+            if (g_dbg.log_scroll > max_scroll) g_dbg.log_scroll = max_scroll;
+            if (g_dbg.log_scroll < 0) g_dbg.log_scroll = 0;
+
+            float scroll_ratio = (float)g_dbg.log_scroll / (float)max_scroll;
+            if (scroll_ratio < 0.0f) scroll_ratio = 0.0f;
+            if (scroll_ratio > 1.0f) scroll_ratio = 1.0f;
+            float thumb_y = sb_y + avail_h * scroll_ratio;
+
+            int mouse_in_sb = (g_dbg.mouse_x >= sb_x && g_dbg.mouse_x <= (float)g_dbg.win_w &&
+                               g_dbg.mouse_y >= sb_y && g_dbg.mouse_y <= sb_y + sb_h);
+            if (mouse_in_sb && g_dbg.mouse_left_pressed) {
+                if (g_dbg.mouse_y >= thumb_y && g_dbg.mouse_y <= thumb_y + thumb_h) {
+                    g_dbg.log_sb_dragging = 1;
+                    g_dbg.log_sb_drag_offset_y = (float)g_dbg.mouse_y - thumb_y;
+                } else if (g_dbg.mouse_y < thumb_y) {
+                    g_dbg.log_scroll -= visible_logs;
+                    if (g_dbg.log_scroll < 0) g_dbg.log_scroll = 0;
+                } else {
+                    g_dbg.log_scroll += visible_logs;
+                    if (g_dbg.log_scroll > max_scroll) g_dbg.log_scroll = max_scroll;
+                }
+            }
+
+            int hover_thumb = (g_dbg.mouse_x >= sb_x && g_dbg.mouse_x <= (float)g_dbg.win_w &&
+                               g_dbg.mouse_y >= thumb_y && g_dbg.mouse_y <= thumb_y + thumb_h);
+            float tr, tg, tb;
+            if (g_dbg.log_sb_dragging) {
+                tr = 0.0f; tg = 0.65f; tb = 1.0f;
+            } else if (hover_thumb) {
+                tr = 0.45f; tg = 0.48f; tb = 0.55f;
+            } else {
+                tr = 0.28f; tg = 0.29f; tb = 0.34f;
+            }
+
+            dbg_draw_rect(sb_x + 2.0f, thumb_y + 1.0f, sb_w - 4.0f, thumb_h - 2.0f, tr, tg, tb, 1.0f);
+            dbg_draw_rect_outline(sb_x + 2.0f, thumb_y + 1.0f, sb_w - 4.0f, thumb_h - 2.0f, 1.0f,
+                                  tr * 1.2f, tg * 1.2f, tb * 1.2f, 1.0f);
+
+            if (thumb_h >= 32.0f) {
+                float mid_y = thumb_y + thumb_h * 0.5f;
+                float g_alpha = g_dbg.log_sb_dragging ? 0.95f : (hover_thumb ? 0.8f : 0.45f);
+                dbg_draw_line(sb_x + 4.0f, mid_y - 3.0f, (float)g_dbg.win_w - 4.0f, mid_y - 3.0f, 1.0f, 0.9f, 0.95f, 1.0f, g_alpha);
+                dbg_draw_line(sb_x + 4.0f, mid_y,        (float)g_dbg.win_w - 4.0f, mid_y,        1.0f, 0.9f, 0.95f, 1.0f, g_alpha);
+                dbg_draw_line(sb_x + 4.0f, mid_y + 3.0f, (float)g_dbg.win_w - 4.0f, mid_y + 3.0f, 1.0f, 0.9f, 0.95f, 1.0f, g_alpha);
+            }
+        } else if (g_dbg.log_count > 0) {
+            dbg_draw_rect(sb_x + 2.0f, sb_y + 1.0f, sb_w - 4.0f, sb_h - 2.0f, 0.18f, 0.19f, 0.22f, 1.0f);
         }
     } else if (g_dbg.active_tab == TAB_BREAKPOINTS) {
         /* BREAKPOINTS LIST VIEW */
@@ -578,45 +662,167 @@ void render_debugger_gui(lua_State *L) {
         lua_pop(L, 1);
     } else if (g_dbg.active_tab == TAB_SCRIPT) {
         /* SOURCE SCRIPT VIEW */
+        float sb_w = 14.0f;
+        float sb_x = (float)g_dbg.win_w - sb_w;
+        float sb_y = main_y + 22.0f;
+        float sb_h = main_h - 22.0f;
+        float content_w = (float)g_dbg.win_w - sb_w;
+
         dbg_draw_rect(0, main_y, (float)g_dbg.win_w, 22, 0.16f, 0.16f, 0.19f, 1.0f);
+        dbg_draw_line(0, main_y + 22, (float)g_dbg.win_w, main_y + 22, 1.0f, 0.25f, 0.25f, 0.28f, 1.0f);
         dbg_draw_text(15, main_y + 6, "LINE", 0.9f, 0.9f, 0.9f, 1.15f);
         dbg_draw_text(60, main_y + 6, "PTR", 0.9f, 0.9f, 0.9f, 1.15f);
         char src_hdr[256];
         snprintf(src_hdr, sizeof(src_hdr), "SOURCE CODE: %s", g_dbg.script_src.file_path);
         dbg_draw_text(100, main_y + 6, src_hdr, 0.9f, 0.9f, 0.9f, 1.15f);
 
-        float src_y = main_y + 24.0f;
         int active_line = (g_dbg.current_proto) ? luaG_getfuncline(g_dbg.current_proto, g_dbg.current_pc) : 0;
-        int visible_src = (int)((main_h - 26) / 20.0f);
+        int visible_src = (int)(sb_h / 20.0f);
+        int max_scroll = g_dbg.script_src.line_count - visible_src;
+        if (max_scroll < 0) max_scroll = 0;
 
-        /* Auto-scroll script to current line */
-        if (active_line > 0) {
-            if (active_line < g_dbg.src_scroll + 1) g_dbg.src_scroll = active_line - 1;
-            else if (active_line > g_dbg.src_scroll + visible_src) g_dbg.src_scroll = active_line - visible_src / 2;
+        /* Auto-scroll script ONLY when active executing line advances/changes */
+        if (active_line > 0 && active_line != g_dbg.last_src_active_line) {
+            g_dbg.last_src_active_line = active_line;
+            if (active_line < g_dbg.src_scroll + 1) {
+                g_dbg.src_scroll = active_line - 1;
+            } else if (active_line > g_dbg.src_scroll + visible_src) {
+                g_dbg.src_scroll = active_line - visible_src / 2;
+            }
             if (g_dbg.src_scroll < 0) g_dbg.src_scroll = 0;
         }
 
+        /* Clamp src_scroll */
+        if (g_dbg.src_scroll > max_scroll) g_dbg.src_scroll = max_scroll;
+        if (g_dbg.src_scroll < 0) g_dbg.src_scroll = 0;
+
+        /* Render source code rows */
         for (int i = 0; i < visible_src; i++) {
             int line_idx = g_dbg.src_scroll + i;
             if (line_idx >= g_dbg.script_src.line_count) break;
-            float cur_sy = src_y + (float)i * 20.0f;
+            float cur_sy = sb_y + (float)i * 20.0f;
             int line_num = line_idx + 1;
             int is_active = (line_num == active_line);
 
-            if (is_active) {
-                dbg_draw_rect(0, cur_sy, (float)g_dbg.win_w, 20, 0.15f, 0.35f, 0.2f, 1.0f);
-                dbg_draw_triangle(60.0f, cur_sy + 4.0f, 60.0f, cur_sy + 16.0f, 72.0f, cur_sy + 10.0f, 0.2f, 1.0f, 0.4f, 1.0f);
-            } else if (i % 2 == 1) {
-                dbg_draw_rect(0, cur_sy, (float)g_dbg.win_w, 20, 0.13f, 0.13f, 0.15f, 1.0f);
+            /* Check if breakpoint is set on this line */
+            int has_bp = 0;
+            for (int b = 0; b < g_dbg.bp_count; b++) {
+                if (g_dbg.breakpoints[b].line == line_num) {
+                    has_bp = 1;
+                    break;
+                }
             }
 
-            char num_str[16]; snprintf(num_str, sizeof(num_str), "%4d", line_num);
+            if (is_active) {
+                dbg_draw_rect(0, cur_sy, content_w, 20, 0.15f, 0.35f, 0.2f, 1.0f);
+                dbg_draw_rect_outline(0, cur_sy, content_w, 20, 1.0f, 0.2f, 0.8f, 0.3f, 1.0f);
+                dbg_draw_triangle(60.0f, cur_sy + 4.0f, 60.0f, cur_sy + 16.0f, 72.0f, cur_sy + 10.0f, 0.2f, 1.0f, 0.4f, 1.0f);
+            } else if (i % 2 == 1) {
+                dbg_draw_rect(0, cur_sy, content_w, 20, 0.13f, 0.13f, 0.15f, 1.0f);
+            }
+
+            /* Draw breakpoint indicator circle in gutter */
+            if (has_bp) {
+                dbg_draw_circle(44.0f, cur_sy + 10.0f, 4.5f, 0.95f, 0.2f, 0.2f, 1.0f);
+                dbg_draw_circle(44.0f, cur_sy + 10.0f, 1.5f, 1.0f, 0.85f, 0.85f, 1.0f);
+            }
+
+            /* Click handling to toggle breakpoint on line */
+            if (g_dbg.mouse_left_pressed && g_dbg.mouse_y >= cur_sy && g_dbg.mouse_y < cur_sy + 20.0f && g_dbg.mouse_x < content_w) {
+                if (g_dbg.mouse_x < 80.0f && g_dbg.current_proto) {
+                    int pc = -1;
+                    for (int pi = 0; pi < g_dbg.current_proto->sizecode; pi++) {
+                        if (luaG_getfuncline(g_dbg.current_proto, pi) == line_num) {
+                            pc = pi;
+                            break;
+                        }
+                    }
+                    if (pc >= 0) toggle_breakpoint(pc, line_num);
+                }
+            }
+
+            char num_str[16];
+            snprintf(num_str, sizeof(num_str), "%4d", line_num);
             dbg_draw_text(15, cur_sy + 4, num_str, 0.5f, 0.55f, 0.6f, 1.15f);
 
             const char *src_text = g_dbg.script_src.lines[line_idx];
             if (src_text) {
                 dbg_draw_text(100, cur_sy + 4, src_text, is_active ? 1.0f : 0.85f, is_active ? 1.0f : 0.85f, is_active ? 0.6f : 0.9f, 1.2f);
             }
+        }
+
+        /* Vertical Scrollbar */
+        dbg_draw_rect(sb_x, sb_y, sb_w, sb_h, 0.12f, 0.12f, 0.14f, 1.0f);
+        dbg_draw_line(sb_x, sb_y, sb_x, sb_y + sb_h, 1.0f, 0.22f, 0.22f, 0.26f, 1.0f);
+
+        if (g_dbg.script_src.line_count > 0 && max_scroll > 0) {
+            float ratio = (float)visible_src / (float)g_dbg.script_src.line_count;
+            float thumb_h = sb_h * ratio;
+            if (thumb_h < 26.0f) thumb_h = 26.0f;
+            if (thumb_h > sb_h - 4.0f) thumb_h = sb_h - 4.0f;
+            float avail_h = sb_h - thumb_h;
+
+            /* Mouse dragging */
+            if (g_dbg.src_sb_dragging) {
+                if (g_dbg.mouse_left_down) {
+                    float new_thumb_y = (float)g_dbg.mouse_y - g_dbg.src_sb_drag_offset_y;
+                    float s_ratio = (new_thumb_y - sb_y) / avail_h;
+                    if (s_ratio < 0.0f) s_ratio = 0.0f;
+                    if (s_ratio > 1.0f) s_ratio = 1.0f;
+                    g_dbg.src_scroll = (int)(s_ratio * (float)max_scroll + 0.5f);
+                } else {
+                    g_dbg.src_sb_dragging = 0;
+                }
+            }
+
+            if (g_dbg.src_scroll > max_scroll) g_dbg.src_scroll = max_scroll;
+            if (g_dbg.src_scroll < 0) g_dbg.src_scroll = 0;
+
+            float scroll_ratio = (float)g_dbg.src_scroll / (float)max_scroll;
+            if (scroll_ratio < 0.0f) scroll_ratio = 0.0f;
+            if (scroll_ratio > 1.0f) scroll_ratio = 1.0f;
+            float thumb_y = sb_y + avail_h * scroll_ratio;
+
+            /* Click on track or thumb */
+            int mouse_in_sb = (g_dbg.mouse_x >= sb_x && g_dbg.mouse_x <= (float)g_dbg.win_w &&
+                               g_dbg.mouse_y >= sb_y && g_dbg.mouse_y <= sb_y + sb_h);
+            if (mouse_in_sb && g_dbg.mouse_left_pressed) {
+                if (g_dbg.mouse_y >= thumb_y && g_dbg.mouse_y <= thumb_y + thumb_h) {
+                    g_dbg.src_sb_dragging = 1;
+                    g_dbg.src_sb_drag_offset_y = (float)g_dbg.mouse_y - thumb_y;
+                } else if (g_dbg.mouse_y < thumb_y) {
+                    g_dbg.src_scroll -= visible_src;
+                    if (g_dbg.src_scroll < 0) g_dbg.src_scroll = 0;
+                } else {
+                    g_dbg.src_scroll += visible_src;
+                    if (g_dbg.src_scroll > max_scroll) g_dbg.src_scroll = max_scroll;
+                }
+            }
+
+            int hover_thumb = (g_dbg.mouse_x >= sb_x && g_dbg.mouse_x <= (float)g_dbg.win_w &&
+                               g_dbg.mouse_y >= thumb_y && g_dbg.mouse_y <= thumb_y + thumb_h);
+            float tr, tg, tb;
+            if (g_dbg.src_sb_dragging) {
+                tr = 0.0f; tg = 0.65f; tb = 1.0f;
+            } else if (hover_thumb) {
+                tr = 0.45f; tg = 0.48f; tb = 0.55f;
+            } else {
+                tr = 0.28f; tg = 0.29f; tb = 0.34f;
+            }
+
+            dbg_draw_rect(sb_x + 2.0f, thumb_y + 1.0f, sb_w - 4.0f, thumb_h - 2.0f, tr, tg, tb, 1.0f);
+            dbg_draw_rect_outline(sb_x + 2.0f, thumb_y + 1.0f, sb_w - 4.0f, thumb_h - 2.0f, 1.0f,
+                                  tr * 1.2f, tg * 1.2f, tb * 1.2f, 1.0f);
+
+            if (thumb_h >= 32.0f) {
+                float mid_y = thumb_y + thumb_h * 0.5f;
+                float g_alpha = g_dbg.src_sb_dragging ? 0.95f : (hover_thumb ? 0.8f : 0.45f);
+                dbg_draw_line(sb_x + 4.0f, mid_y - 3.0f, (float)g_dbg.win_w - 4.0f, mid_y - 3.0f, 1.0f, 0.9f, 0.95f, 1.0f, g_alpha);
+                dbg_draw_line(sb_x + 4.0f, mid_y,        (float)g_dbg.win_w - 4.0f, mid_y,        1.0f, 0.9f, 0.95f, 1.0f, g_alpha);
+                dbg_draw_line(sb_x + 4.0f, mid_y + 3.0f, (float)g_dbg.win_w - 4.0f, mid_y + 3.0f, 1.0f, 0.9f, 0.95f, 1.0f, g_alpha);
+            }
+        } else if (g_dbg.script_src.line_count > 0) {
+            dbg_draw_rect(sb_x + 2.0f, sb_y + 1.0f, sb_w - 4.0f, sb_h - 2.0f, 0.18f, 0.19f, 0.22f, 1.0f);
         }
     }
 

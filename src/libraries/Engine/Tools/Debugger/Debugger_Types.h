@@ -123,6 +123,7 @@ typedef struct {
     int reg_scroll;
     int k_scroll;
     int src_scroll;
+    int last_src_active_line;
 
     /* Mouse & UI interaction */
     double mouse_x, mouse_y;

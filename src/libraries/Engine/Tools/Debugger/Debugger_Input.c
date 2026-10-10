@@ -66,26 +66,50 @@ void dbg_key_callback(GLFWwindow *window, int key, int scancode, int action, int
         case GLFW_KEY_4: g_dbg.active_tab = TAB_MEMORY; break;
         case GLFW_KEY_5: g_dbg.active_tab = TAB_SCRIPT; break;
         case GLFW_KEY_UP:
-            if (g_dbg.selected_pc > 0) {
-                g_dbg.selected_pc--;
-                if (g_dbg.selected_pc < g_dbg.disasm_scroll_pc)
-                    g_dbg.disasm_scroll_pc = g_dbg.selected_pc;
+            if (g_dbg.active_tab == TAB_CPU) {
+                if (g_dbg.selected_pc > 0) {
+                    g_dbg.selected_pc--;
+                    if (g_dbg.selected_pc < g_dbg.disasm_scroll_pc)
+                        g_dbg.disasm_scroll_pc = g_dbg.selected_pc;
+                }
+            } else if (g_dbg.active_tab == TAB_SCRIPT) {
+                if (g_dbg.src_scroll > 0) g_dbg.src_scroll--;
+            } else if (g_dbg.active_tab == TAB_LOG) {
+                if (g_dbg.log_scroll > 0) g_dbg.log_scroll--;
             }
             break;
         case GLFW_KEY_DOWN:
-            if (g_dbg.selected_pc < g_dbg.disasm_count - 1) {
-                g_dbg.selected_pc++;
-                int max_vis = (int)(((float)g_dbg.win_h - 84.0f - 24.0f - 22.0f) / 22.0f);
-                if (max_vis < 5) max_vis = 5;
-                if (g_dbg.selected_pc >= g_dbg.disasm_scroll_pc + max_vis)
-                    g_dbg.disasm_scroll_pc = g_dbg.selected_pc - max_vis + 1;
+            if (g_dbg.active_tab == TAB_CPU) {
+                if (g_dbg.selected_pc < g_dbg.disasm_count - 1) {
+                    g_dbg.selected_pc++;
+                    int max_vis = (int)(((float)g_dbg.win_h - 84.0f - 24.0f - 22.0f) / 22.0f);
+                    if (max_vis < 5) max_vis = 5;
+                    if (g_dbg.selected_pc >= g_dbg.disasm_scroll_pc + max_vis)
+                        g_dbg.disasm_scroll_pc = g_dbg.selected_pc - max_vis + 1;
+                }
+            } else if (g_dbg.active_tab == TAB_SCRIPT) {
+                g_dbg.src_scroll++;
+            } else if (g_dbg.active_tab == TAB_LOG) {
+                g_dbg.log_scroll++;
             }
             break;
         case GLFW_KEY_PAGE_UP:
-            g_dbg.disasm_scroll_pc = (g_dbg.disasm_scroll_pc > 10) ? g_dbg.disasm_scroll_pc - 10 : 0;
+            if (g_dbg.active_tab == TAB_CPU) {
+                g_dbg.disasm_scroll_pc = (g_dbg.disasm_scroll_pc > 10) ? g_dbg.disasm_scroll_pc - 10 : 0;
+            } else if (g_dbg.active_tab == TAB_SCRIPT) {
+                g_dbg.src_scroll = (g_dbg.src_scroll > 10) ? g_dbg.src_scroll - 10 : 0;
+            } else if (g_dbg.active_tab == TAB_LOG) {
+                g_dbg.log_scroll = (g_dbg.log_scroll > 10) ? g_dbg.log_scroll - 10 : 0;
+            }
             break;
         case GLFW_KEY_PAGE_DOWN:
-            g_dbg.disasm_scroll_pc += 10;
+            if (g_dbg.active_tab == TAB_CPU) {
+                g_dbg.disasm_scroll_pc += 10;
+            } else if (g_dbg.active_tab == TAB_SCRIPT) {
+                g_dbg.src_scroll += 10;
+            } else if (g_dbg.active_tab == TAB_LOG) {
+                g_dbg.log_scroll += 10;
+            }
             break;
     }
 }
@@ -119,14 +143,14 @@ void dbg_scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
             g_dbg.disasm_scroll_pc -= (int)(yoffset * 3.0);
             if (g_dbg.disasm_scroll_pc < 0) g_dbg.disasm_scroll_pc = 0;
         } else {
-            g_dbg.reg_scroll -= (int)yoffset;
+            g_dbg.reg_scroll -= (int)(yoffset * 2.0);
             if (g_dbg.reg_scroll < 0) g_dbg.reg_scroll = 0;
         }
     } else if (g_dbg.active_tab == TAB_LOG) {
-        g_dbg.log_scroll -= (int)(yoffset * 2.0);
+        g_dbg.log_scroll -= (int)(yoffset * 3.0);
         if (g_dbg.log_scroll < 0) g_dbg.log_scroll = 0;
     } else if (g_dbg.active_tab == TAB_SCRIPT) {
-        g_dbg.src_scroll -= (int)(yoffset * 2.0);
+        g_dbg.src_scroll -= (int)(yoffset * 3.0);
         if (g_dbg.src_scroll < 0) g_dbg.src_scroll = 0;
     }
 }
@@ -219,26 +243,50 @@ void poll_global_hotkeys(lua_State *L) {
 
         /* Up / Down navigation */
         if (is_key_just_pressed(VK_UP, &g_hotkeys.up_down)) {
-            if (g_dbg.selected_pc > 0) {
-                g_dbg.selected_pc--;
-                if (g_dbg.selected_pc < g_dbg.disasm_scroll_pc)
-                    g_dbg.disasm_scroll_pc = g_dbg.selected_pc;
+            if (g_dbg.active_tab == TAB_CPU) {
+                if (g_dbg.selected_pc > 0) {
+                    g_dbg.selected_pc--;
+                    if (g_dbg.selected_pc < g_dbg.disasm_scroll_pc)
+                        g_dbg.disasm_scroll_pc = g_dbg.selected_pc;
+                }
+            } else if (g_dbg.active_tab == TAB_SCRIPT) {
+                if (g_dbg.src_scroll > 0) g_dbg.src_scroll--;
+            } else if (g_dbg.active_tab == TAB_LOG) {
+                if (g_dbg.log_scroll > 0) g_dbg.log_scroll--;
             }
         }
         if (is_key_just_pressed(VK_DOWN, &g_hotkeys.down_down)) {
-            if (g_dbg.selected_pc < g_dbg.disasm_count - 1) {
-                g_dbg.selected_pc++;
-                int max_vis = (int)(((float)g_dbg.win_h - 84.0f - 24.0f - 22.0f) / 22.0f);
-                if (max_vis < 5) max_vis = 5;
-                if (g_dbg.selected_pc >= g_dbg.disasm_scroll_pc + max_vis)
-                    g_dbg.disasm_scroll_pc = g_dbg.selected_pc - max_vis + 1;
+            if (g_dbg.active_tab == TAB_CPU) {
+                if (g_dbg.selected_pc < g_dbg.disasm_count - 1) {
+                    g_dbg.selected_pc++;
+                    int max_vis = (int)(((float)g_dbg.win_h - 84.0f - 24.0f - 22.0f) / 22.0f);
+                    if (max_vis < 5) max_vis = 5;
+                    if (g_dbg.selected_pc >= g_dbg.disasm_scroll_pc + max_vis)
+                        g_dbg.disasm_scroll_pc = g_dbg.selected_pc - max_vis + 1;
+                }
+            } else if (g_dbg.active_tab == TAB_SCRIPT) {
+                g_dbg.src_scroll++;
+            } else if (g_dbg.active_tab == TAB_LOG) {
+                g_dbg.log_scroll++;
             }
         }
         if (is_key_just_pressed(VK_PRIOR, &g_hotkeys.pgup_down)) {
-            g_dbg.disasm_scroll_pc = (g_dbg.disasm_scroll_pc > 10) ? g_dbg.disasm_scroll_pc - 10 : 0;
+            if (g_dbg.active_tab == TAB_CPU) {
+                g_dbg.disasm_scroll_pc = (g_dbg.disasm_scroll_pc > 10) ? g_dbg.disasm_scroll_pc - 10 : 0;
+            } else if (g_dbg.active_tab == TAB_SCRIPT) {
+                g_dbg.src_scroll = (g_dbg.src_scroll > 10) ? g_dbg.src_scroll - 10 : 0;
+            } else if (g_dbg.active_tab == TAB_LOG) {
+                g_dbg.log_scroll = (g_dbg.log_scroll > 10) ? g_dbg.log_scroll - 10 : 0;
+            }
         }
         if (is_key_just_pressed(VK_NEXT, &g_hotkeys.pgdn_down)) {
-            g_dbg.disasm_scroll_pc += 10;
+            if (g_dbg.active_tab == TAB_CPU) {
+                g_dbg.disasm_scroll_pc += 10;
+            } else if (g_dbg.active_tab == TAB_SCRIPT) {
+                g_dbg.src_scroll += 10;
+            } else if (g_dbg.active_tab == TAB_LOG) {
+                g_dbg.log_scroll += 10;
+            }
         }
     }
 }
